@@ -1,0 +1,168 @@
+import getopt
+import sys
+import warnings
+
+opcode = dict(
+    ADD=['00000', 'registers', 'registers', 'registers'],
+    ADDi=['00001', 'registers', 'registers', 'immediate'],
+    SUB=['00010', 'registers', 'registers', 'registers'],
+    SUBi=['00011', 'registers', 'registers', 'immediate'],
+    LW=['00100', 'registers', 'registers', 'immediate'],
+    SW=['00101', 'registers', 'registers', 'immediate'],
+    MOV=['00110', 'registers', 'registers'],
+    MOVi=['00111', 'registers', 'immediate'],
+    AND=['01000', 'registers', 'registers', 'registers'],
+    OR=['01001', 'registers', 'registers', 'registers'],
+    NOR=['01010', 'registers', 'registers', 'registers'],
+    SLL=['01011', 'registers', 'registers', 'immediate'],
+    SRL=['01100', 'registers', 'registers', 'immediate'],
+    SRA=['01101', 'registers', 'registers', 'immediate'],
+    B=['01110', 'condition', 'label'],
+    J=['01111', 'immediate'],
+    JR=['10000', 'register'],
+    JAL=['10001', 'label'],
+    ACT=['10010', 'sprites', 'actions', 'registers'],
+    ACTi=['10010', 'sprites', 'actions', 'immediate'],
+    LD=['10011', 'sprites', 'actions', 'registers'],
+    LDi=['10011'],
+    RD=['10100'],
+    MAP=['10101'],
+    CORD=['10110'],
+    KEY=['10111'],
+    TM=['11000'],
+    HALT=['11111']
+)
+
+registers = dict(
+    R0='00000',
+    R1='00001',
+    R2='00010',
+    R3='00011',
+    R4='00100',
+    R5='00101',
+    R6='00110',
+    R7='00111',
+    R8='01000',
+    R9='01001',
+    R10='01010',
+    R11='01011',
+    R12='01100',
+    R13='01101',
+    R14='01110',
+    R15='01111',
+    R16='10000',
+    R17='10001',
+    R18='10010',
+    R19='10011',
+    R20='10100',
+    R21='10101',
+    R22='10110',
+    R23='10111',
+    R24='11000',
+    R25='11001',
+    R26='11010',
+    R27='11011',
+    R28='11100',
+    R29='11101',
+    R30='11110',
+    R31='11111'
+)
+
+attributes = dict(
+    HTH='0000',
+    SCR='0001',
+    LIV='0010',
+    SPD='0011',
+    DIF='0100',
+    DAM='0101',
+    PLY='0110',
+    IMG='0111',
+    XCRD='1000',
+    YCRD='1001'
+)
+
+actions = dict(
+    UP='0000',
+    DO='0001',
+    LFT='0010',
+    RGH='0011',
+    DES='0100',
+    CRT='0101',
+    RST='0110',
+    ATK='0111'
+)
+
+condition = dict(
+    NEQ='000',
+    EQ='001',
+    GT='010',
+    LT='011',
+    GTE='100',
+    LTE='101',
+    OVFL='110',
+    UNCON='111'
+)
+
+hex_digits = {
+    '0': "0000",
+    '1': "0001",
+    '2': "0010",
+    '3': "0011",
+    '4': "0100",
+    '5': "0101",
+    '6': "0110",
+    '7': "0111",
+    '8': "1000",
+    '9': "1001",
+    'A': "1010",
+    'a': "1010",
+    'B': "1011",
+    'b': "1011",
+    'C': "1100",
+    'c': "1100",
+    'D': "1101",
+    'd': "1101",
+    'E': "1110",
+    'e': "1110",
+    'F': "1111",
+    'f': "1111"
+}
+
+def process(line, outfile):
+    args = line.split()
+    # TODO: Parse out labels
+    op = opcode.get(args[0], "BAD")
+    if op == "BAD":
+        warnings.warn("Bad arguments received", SyntaxWarning)
+    else:
+        print args
+    print op
+    outfile.write("%s\n" % op)
+
+
+def main(argv):
+    inputfile = ''
+    outputfile = ''
+    try:
+        opts, args = getopt.getopt(argv, "hi:o:", ["ifile=", "ofile="])
+    except getopt.GetoptError:
+        print 'test.py -i <inputfile> -o <outputfile>'
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-help':
+            print 'test.py -i <inputfile> -o <outputfile>'
+            sys.exit()
+        elif opt in ("-i", "--ifile"):
+            inputfile = arg
+        elif opt in ("-o", "--ofile"):
+            outputfile = arg
+
+    f = open(inputfile, 'r')
+    o = open(outputfile, 'w')
+    for line in f:
+        process(line, o)
+    f.close()
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
