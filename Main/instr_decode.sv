@@ -1,5 +1,5 @@
 
-module instr_decode(clk,rst_n,instr, regS_data, regT_data, regS_addr, regT_addr, opcode, imm, regS_data_ID, regT_data_ID, use_imm,
+module instr_decode(clk,rst_n,instr, regS_data, regT_data, regS_addr, regT_addr, alu_opcode, imm, regS_data_ID, regT_data_ID, use_imm,
 	  use_dst_reg, branch_instr, update_sign, update_neg, update_carry, update_overflow, update_zero, sprite_addr, 
 	  sprite_action, sprite_use_imm, sprite_imm, sprite_reg, sprite_re, sprite_we, sprite_use_dst_reg, IOR, dst_reg, reT, reS, hlt);
 
@@ -10,7 +10,7 @@ input [31:0]regS_data, regT_data; //reg data from the reg file
 output logic hlt;
 
 output [4:0]regS_addr, regT_addr; //to the reg file 
-output [4:0]opcode; //to pipleine reg for EX stage
+output logic [2:0]alu_opcode; //to pipleine reg for EX stage\
 output [16:0]imm; //to branch predictor and ID/EX pipeline reg
 output [31:0]regS_data_ID, regT_data_ID; 
 output [4:0] dst_reg; //sent down the pipeline for WB
@@ -29,22 +29,7 @@ output sprite_use_imm;
 output [9:0]sprite_imm;
 output [4:0]sprite_reg;
 output logic sprite_re, sprite_we, sprite_use_dst_reg;
-output logic IOR; //read signal for spart
-
-assign dst_reg = instr[26:22];
-assign sprite_action = instr[26:23];
-assign regS_addr = instr[21:17];
-assign regT_addr = instr[16:12];
-assign opcode = instr[31:27];
-assign imm = instr[16:0];
-assign regS_data_ID = regS_data;
-assign regT_data_ID = regT_data;
-
-//sprite assign statements
-assign sprite_addr = instr[22:15];
-assign sprite_use_imm = instr[0];
-assign sprite_imm = instr[14:5];
-assign sprite_reg = instr[14:10];
+output logic IOR;// use_alu; //read signal for spart
 
 
 localparam ADD = 5'b00000;
@@ -82,6 +67,30 @@ localparam ALU_SLL = 3'b101;
 localparam ALU_SRL = 3'b110;
 localparam ALU_SRA = 3'b111;
 
+
+wire [4:0] opcode;
+
+assign dst_reg = instr[26:22];
+assign sprite_action = instr[26:23];
+
+assign regS_addr = (opcode == MOVi) ? 4'h0 : //want S to be 0 so acts like an ADDi instr
+		    instr[21:17];
+assign regT_addr = (opcode == MOV) ? 4'h0 :
+		    instr[16:12];
+
+assign opcode = instr[31:27];
+assign imm = instr[16:0];
+assign regS_data_ID = regS_data;
+assign regT_data_ID = regT_data;
+
+//sprite assign statements
+assign sprite_addr = instr[22:15];
+assign sprite_use_imm = instr[0];
+assign sprite_imm = instr[14:5];
+assign sprite_reg = instr[14:10];
+
+
+
 always_comb begin
  use_imm = 0;
  use_dst_reg = 0;
@@ -95,10 +104,13 @@ always_comb begin
  update_overflow = 0; 
  update_zero = 0;
 
+ //use_alu = 0;
+
  sprite_re = 0;
  sprite_we = 0;
  sprite_use_dst_reg = 0;
 
+ alu_opcode = 0;
  branch_instr = 0;
 
  IOR = 0;
@@ -108,33 +120,39 @@ always_comb begin
  	reT = 1;
  	reS = 1;
 	use_dst_reg = 1;
-	update_sign = 0; 
- 	update_neg = 0; 
- 	update_carry = 0; 
- 	update_overflow = 0; 
- 	update_zero = 0;
+	update_sign = 1; 
+ 	update_neg = 1; 
+ 	update_carry = 1; 
+ 	update_overflow = 1; 
+ 	update_zero = 1;
+	alu_opcode = ALU_ADD;
+	//use_alu = 1;
 	end
 
 	ADDi : begin
  	reS = 1;
 	use_imm = 1;
 	use_dst_reg = 1;
-	update_sign = 0; 
- 	update_neg = 0; 
- 	update_carry = 0; 
- 	update_overflow = 0; 
- 	update_zero = 0;
+	update_sign = 1; 
+ 	update_neg = 1; 
+ 	update_carry = 1; 
+ 	update_overflow = 1; 
+ 	update_zero = 1;
+	alu_opcode = ALU_ADD;
+	//use_alu = 1;
 	end
 
 	SUB : begin
  	reT = 1;
  	reS = 1;
   	use_dst_reg = 1;
-	update_sign = 0; 
- 	update_neg = 0; 
- 	update_carry = 0; 
- 	update_overflow = 0; 
- 	update_zero = 0;
+	update_sign = 1; 
+ 	update_neg = 1; 
+ 	update_carry = 1; 
+ 	update_overflow = 1; 
+ 	update_zero = 1;
+	alu_opcode = ALU_SUB;
+	//use_alu = 1;
 	end
 
 	SUBi : begin 
@@ -146,6 +164,8 @@ always_comb begin
  	update_carry = 1; 
  	update_overflow = 1; 
  	update_zero = 1;
+	alu_opcode = ALU_SUB;   //CHECK
+	//use_alu = 1;
 	end
 
 	LW : begin
@@ -173,6 +193,8 @@ always_comb begin
  	reS = 1;
 	use_dst_reg = 1; 
  	update_zero = 1;
+	alu_opcode = ALU_AND;
+	//use_alu = 1;
 	end
 
 	OR : begin
@@ -180,6 +202,8 @@ always_comb begin
  	reS = 1;
 	use_dst_reg = 1;
 	update_zero = 1;
+	alu_opcode = ALU_OR;
+	//use_alu = 1;
 	end
 
 	NOR : begin
@@ -187,6 +211,8 @@ always_comb begin
  	reS = 1;
 	use_dst_reg = 1;
 	update_zero = 1;
+	alu_opcode = ALU_NOR;
+	//use_alu = 1;
 	end
 
 	SLL : begin
@@ -195,6 +221,8 @@ always_comb begin
 	use_imm = 1;
 	update_zero = 1;
 	update_overflow = 1; //not sure
+	alu_opcode = ALU_SLL;
+	//use_alu = 1;
 	end
 
 	SRL : begin
@@ -202,6 +230,8 @@ always_comb begin
 	use_dst_reg = 1;
 	use_imm = 1;
 	update_zero = 1;
+	alu_opcode = ALU_SRL;
+	//use_alu = 1;
 	end
 
 	SRA : begin
@@ -209,6 +239,8 @@ always_comb begin
 	use_dst_reg = 1;
 	use_imm = 1;
 	update_zero = 1;
+	alu_opcode = ALU_SRA;
+	//use_alu = 1;
 	end
 
 	B : begin
@@ -263,7 +295,7 @@ always_comb begin
 	end
 
 	TM : begin
-
+	sprite_we = 1;
 	end
 
 
