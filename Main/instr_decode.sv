@@ -73,7 +73,14 @@ localparam CORD = 5'b10110;
 localparam KEY = 5'b10111;
 localparam TM = 5'b11000;
 
-
+localparam ALU_ADD = 3'b000;
+localparam ALU_SUB = 3'b001;
+localparam ALU_AND = 3'b010;
+localparam ALU_OR = 3'b011;
+localparam ALU_NOR = 3'b100;
+localparam ALU_SLL = 3'b101;
+localparam ALU_SRL = 3'b110;
+localparam ALU_SRA = 3'b111;
 
 always_comb begin
  use_imm = 0;
