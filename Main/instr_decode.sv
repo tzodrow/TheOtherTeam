@@ -1,7 +1,7 @@
 
 module instr_decode(clk,rst_n,instr, regS_data, regT_data, regS_addr, regT_addr, alu_opcode, imm, regS_data_ID, regT_data_ID, use_imm,
 	  use_dst_reg, branch_instr, update_neg, update_carry, update_overflow, update_zero, sprite_addr, 
-	  sprite_action, sprite_use_imm, sprite_imm, sprite_reg, sprite_re, sprite_we, sprite_use_dst_reg, IOR, dst_reg, reT, reS, hlt,
+	  sprite_action, sprite_use_imm, sprite_imm, sprite_reg_data, sprite_re, sprite_we, sprite_use_dst_reg, IOR, dst_reg, reT, reS, hlt,
 	  PC_in, PC_out);
 
 input clk,rst_n;
@@ -28,7 +28,7 @@ output [7:0]sprite_addr; //tells EX which sprite it's accessing
 output [3:0]sprite_action;
 output sprite_use_imm;
 output [13:0]sprite_imm;
-output [4:0]sprite_reg;
+output [31:0]sprite_reg_data;
 output logic sprite_re, sprite_we, sprite_use_dst_reg;
 output logic IOR;// use_alu; //read signal for spart
 
@@ -70,14 +70,20 @@ localparam ALU_SRA = 3'b111;
 
 
 wire [4:0] opcode;
-
 assign PC_out = PC_in;
-assign dst_reg = instr[26:22];
+
+logic cord_instr, rd_instr, mov_instr, movi_instr, act_ld_instr; //asserted for the CORD and RD gpu instructions for determining dst_reg bitfield
+
+assign dst_reg = (cord_instr == 1) ? instr[21:17]:
+		 (rd_instr == 1) ? instr[14:10]:
+		 instr[26:22];
+
 assign sprite_action = instr[26:23];
 
-assign regS_addr = (opcode == MOVi) ? 4'h0 : //want S to be 0 so acts like an ADDi instr
+assign regS_addr = (movi_instr == 1) ? 4'h0 : //want S to be 0 so acts like an ADDi instr
+		   (act_ld_instr == 1) ?  instr[14:10]: //bitfield for source reg is different for this ACT and LD gpu instructions
 		    instr[21:17];
-assign regT_addr = (opcode == MOV) ? 4'h0 :
+assign regT_addr = (mov_instr == 1) ? 4'h0 :
 		    instr[16:12];
 
 assign opcode = instr[31:27];
@@ -89,7 +95,8 @@ assign regT_data_ID = regT_data;
 assign sprite_addr = instr[22:15];
 assign sprite_use_imm = instr[0];
 assign sprite_imm = instr[14:1];
-assign sprite_reg = instr[14:10];
+
+assign sprite_reg = regS_data_ID;
 
 
 
@@ -99,7 +106,11 @@ always_comb begin
  reT = 0;
  reS = 0;
  hlt = 0;
-
+ cord_instr = 0;
+ rd_instr = 0;
+ movi_instr = 0;
+ mov_instr = 0;
+ act_ld_instr = 0;
  //update_sign = 0; 
  update_neg = 0; 
  update_carry = 0; 
@@ -182,12 +193,14 @@ always_comb begin
 	MOV : begin
  	reS = 1;
 	use_dst_reg = 1;
+	mov_instr = 1;
 	end	
 
 	MOVi : begin
  	reS = 1;
 	use_dst_reg = 1;
 	use_imm = 1;
+	movi_instr = 1;
 	end
 
 	AND : begin
@@ -267,29 +280,28 @@ always_comb begin
 
 	ACT : begin
 	sprite_we = 1;
-
+	act_ld_instr = 1;
 	end
 
 	LD : begin
 	sprite_we = 1;
-
+	act_ld_instr = 1;
 	end
 
 	RD : begin
 	sprite_re = 1;
 	sprite_use_dst_reg = 1;
-
+	rd_instr = 1;
 	end
 
 	MAP : begin
 	sprite_we = 1;
-
 	end
 
 	CORD : begin
 	sprite_re = 1;
 	sprite_use_dst_reg = 1;
-
+	cord_instr = 1;
 	end
 
 	KEY : begin
