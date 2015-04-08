@@ -1,4 +1,3 @@
-
 module instr_decode(clk,rst_n,instr, regS_data, regT_data, regS_addr, regT_addr, alu_opcode, imm, regS_data_ID, regT_data_ID, use_imm,
 	  use_dst_reg, branch_instr, update_neg, update_carry, update_overflow, update_zero, sprite_addr, 
 	  sprite_action, sprite_use_imm, sprite_imm, sprite_reg_data, sprite_re, sprite_we, sprite_use_dst_reg, IOR, dst_reg, reT, reS, hlt,
@@ -317,5 +316,3 @@ always_comb begin
 end
 
 endmodule
-  
-  
