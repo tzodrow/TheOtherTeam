@@ -43,7 +43,14 @@ module EX(
 	wire ov, neg, zero, carry;
 	
 	assign src0 = s; 
+	
+	
+	
+	//Need to fix this below. the sign extention doesn't work properly for positive numbers: Alex and Manji 
 	assign src1 = use_imm ? {15{imm}, imm} : t; 
+	
+	
+	
 	
 	//Get Bitwise NOT of SRC0 for subtraction
 	assign src1Not = ~(src1);
