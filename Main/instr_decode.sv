@@ -1,8 +1,8 @@
 
 module instr_decode(clk,rst_n,instr, alu_opcode, imm, regS_data_ID, regT_data_ID, use_imm,
-	  use_dst_reg, branch_instr, update_neg, update_carry, update_overflow, update_zero, sprite_addr, 
+	  use_dst_reg, is_branch_instr, update_neg, update_carry, update_overflow, update_zero, sprite_addr, 
 	  sprite_action, sprite_use_imm, sprite_imm, /*sprite_reg_data,*/ sprite_re, sprite_we, sprite_use_dst_reg, IOR, dst_reg, hlt,
-	  PC_in, PC_out, dst_reg_WB, dst_reg_data_WB, we);
+	  PC_in, PC_out, dst_reg_WB, dst_reg_data_WB, we, branch_addr, branch_conditions);
 
 input clk,rst_n;
 input [31:0]instr;
@@ -15,19 +15,22 @@ input we; //from WB
 
 output logic hlt;
 
+output [2:0] branch_conditions; //conditional code for branch instructions
+output logic is_branch_instr; //sent to branch predictor to tell if a branch instr is decoded
+output [21:0] branch_addr; //New PC addr from a branch instr
+output logic update_neg, update_carry, update_overflow, update_zero; //control signals for EX to determine which flags to update 
 
 output logic [2:0]alu_opcode; //to pipleine reg for EX stage\
 output [16:0]imm; //to branch predictor and ID/EX pipeline reg
-output [31:0]regS_data_ID, regT_data_ID;
-output [21:0] PC_out; 
+output [31:0]regS_data_ID, regT_data_ID; //reg data from the register file
+output [21:0] PC_out; //PC simply passed along the pipeline
 output [4:0] dst_reg; //sent down the pipeline for WB
 output logic use_imm; //asserted for any instruction which uses immediate values
 output logic use_dst_reg; //asserted if a destination reg is used
-output logic branch_instr; //sent to branch predictor to tell if a branch instr is decoded
 
 
-//control signals for EX to determine which flags to update 
-output logic update_neg, update_carry, update_overflow, update_zero;
+
+
 
 
 output [7:0]sprite_addr; //tells EX which sprite it's accessing
@@ -89,6 +92,9 @@ assign dst_reg = (cord_instr == 1) ? instr[14:10]:
 		 (rd_instr == 1) ? instr[14:10]:
 		 instr[26:22];
 
+assign branch_conditions = instr[26:24];
+assign branch_addr = instr[21:0];
+
 assign sprite_action = instr[26:23];
 
 assign regS_addr = (movi_instr == 1) ? 4'h0 : //want S to be 0 so acts like an ADDi instr
@@ -135,7 +141,7 @@ always_comb begin
  sprite_use_dst_reg = 0;
 
  alu_opcode = 0;
- branch_instr = 0;
+ is_branch_instr = 0;
 
  IOR = 0;
 
@@ -271,18 +277,18 @@ always_comb begin
 
 	B : begin
 	use_imm = 1;
-	branch_instr = 1;
+	is_branch_instr = 1;
 	end
 
 	JR : begin
  	reS = 1;
-	branch_instr = 1;
+	is_branch_instr = 1;
 	end
 
 	JAL : begin
 	use_dst_reg = 1;
 	use_imm = 1;
-	branch_instr = 1;
+	is_branch_instr = 1;
 	end
 
 	HALT : begin
