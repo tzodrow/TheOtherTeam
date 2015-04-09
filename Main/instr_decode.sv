@@ -1,15 +1,19 @@
-module instr_decode(clk,rst_n,instr, regS_data, regT_data, regS_addr, regT_addr, alu_opcode, imm, regS_data_ID, regT_data_ID, use_imm,
+
+module instr_decode(clk,rst_n,instr, alu_opcode, imm, regS_data_ID, regT_data_ID, use_imm,
 	  use_dst_reg, branch_instr, update_neg, update_carry, update_overflow, update_zero, sprite_addr, 
-	  sprite_action, sprite_use_imm, sprite_imm, sprite_reg_data, sprite_re, sprite_we, sprite_use_dst_reg, IOR, dst_reg, reT, reS, hlt,
-	  PC_in, PC_out);
+	  sprite_action, sprite_use_imm, sprite_imm, /*sprite_reg_data,*/ sprite_re, sprite_we, sprite_use_dst_reg, IOR, dst_reg, hlt,
+	  PC_in, PC_out, dst_reg_WB, dst_reg_data_WB, we);
 
 input clk,rst_n;
 input [31:0]instr, PC_in;
-input [31:0]regS_data, regT_data; //reg data from the reg file
+//input [31:0]regS_data, regT_data; //reg data from the reg file
+input [4:0]dst_reg_WB;
+input [31:0]dst_reg_data_WB;
+input we; //from WB
 
 output logic hlt;
 
-output [4:0]regS_addr, regT_addr; //to the reg file 
+
 output logic [2:0]alu_opcode; //to pipleine reg for EX stage\
 output [16:0]imm; //to branch predictor and ID/EX pipeline reg
 output [31:0]regS_data_ID, regT_data_ID, PC_out; 
@@ -17,7 +21,7 @@ output [4:0] dst_reg; //sent down the pipeline for WB
 output logic use_imm; //asserted for any instruction which uses immediate values
 output logic use_dst_reg; //asserted if a destination reg is used
 output logic branch_instr; //sent to branch predictor to tell if a branch instr is decoded
-output logic reT, reS; //Reg read enable signals sent to the reg file
+
 
 //control signals for EX to determine which flags to update 
 output logic update_neg, update_carry, update_overflow, update_zero;
@@ -27,9 +31,14 @@ output [7:0]sprite_addr; //tells EX which sprite it's accessing
 output [3:0]sprite_action;
 output sprite_use_imm;
 output [13:0]sprite_imm;
-output [31:0]sprite_reg_data;
+//output [31:0]sprite_reg_data;
 output logic sprite_re, sprite_we, sprite_use_dst_reg;
 output logic IOR;// use_alu; //read signal for spart
+
+
+logic reT, reS; //Reg read enable signals sent to the reg file
+wire [4:0]regS_addr, regT_addr; //to the reg file 
+reg_file iRF(.clk(clk),.regS(regS_addr),.regT(regT_addr),.p0(regS_data_ID),.p1(regT_data_ID),.reS(reS),.reT(reT),.dst_reg_WB(dst_reg_WB),.dst_reg_data_WB(dst_reg_data_WB),.we(we),.hlt(hlt));
 
 
 localparam ADD = 5'b00000;
@@ -73,7 +82,7 @@ assign PC_out = PC_in;
 
 logic cord_instr, rd_instr, mov_instr, movi_instr, act_ld_instr; //asserted for the CORD and RD gpu instructions for determining dst_reg bitfield
 
-assign dst_reg = (cord_instr == 1) ? instr[21:17]:
+assign dst_reg = (cord_instr == 1) ? instr[14:10]:
 		 (rd_instr == 1) ? instr[14:10]:
 		 instr[26:22];
 
@@ -87,15 +96,15 @@ assign regT_addr = (mov_instr == 1) ? 4'h0 :
 
 assign opcode = instr[31:27];
 assign imm = instr[16:0];
-assign regS_data_ID = regS_data;
-assign regT_data_ID = regT_data;
+//assign regS_data_ID = regS_data;
+//assign regT_data_ID = regT_data;
 
 //sprite assign statements
 assign sprite_addr = instr[22:15];
 assign sprite_use_imm = instr[0];
 assign sprite_imm = instr[14:1];
 
-assign sprite_reg = regS_data_ID;
+//assign sprite_reg_data = regS_data_ID;
 
 
 
@@ -316,3 +325,5 @@ always_comb begin
 end
 
 endmodule
+  
+  
