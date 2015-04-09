@@ -9,7 +9,7 @@ module pc(
 	assign re = ~stall;
 	
 	// Implement the Program Counter
-	always @ (posedge clk, negedge clk_n)
+	always @ (posedge clk, negedge rst_n)
 		if(!rst_n)
 			curr_pc <= 0;
 		else
