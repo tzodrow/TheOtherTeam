@@ -81,6 +81,21 @@ instr_decode(clk,rst_n, ID_instr, ID_alu_opcode, ID_imm, ID_s_data, ID_t_data, I
 
 //EX Stage Wire Declarations
 
+wire EX_use_imm;
+wire EX_update_ov, EX_update_neg, EX_update_carry, EX_update_zero;
+wire EX_ov, EX_neg, EX_zero, EX_carry;
+wire[2:0] EX_alu_opcode;
+wire[16:0] EX_imm;
+wire[31:0] EX_s_data, EX_t_data, EX_ALU_result;
+
+//sprite wires
+wire EX_sprite_use_imm, EX_sprite_re, EX_sprite_we, EX_sprite_use_dst_reg;
+wire[3:0] EX_sprite_action;
+wire[7:0] EX_sprite_addr;
+wire[13:0] EX_sprite_imm;
+wire[31:0] EX_sprite_data;
+
+
 //////////////////
 //PIPE: Instruction Decode - Execute
 //////////////////
@@ -89,7 +104,11 @@ instr_decode(clk,rst_n, ID_instr, ID_alu_opcode, ID_imm, ID_s_data, ID_t_data, I
 
 
 //EX Module Declaration
-
+EX EX(clk, EX_alu_opcode, EX_update_ov, EX_update_neg, EX_update_zero, EX_update_carry,
+            EX_t_data, EX_s_data, EX_imm, EX_use_imm, EX_sprite_action, EX_sprite_imm, EX_sprite_use_imm, EX_sprite_addr,
+	         EX_sprite_re, EX_sprite_we, EX_sprite_use_dst_reg, // < ^inputs 
+	         EX_ALU_result, EX_sprite_data, EX_ov, EX_neg, EX_zero, EX_carry //outputs
+	);
 
 //////////////////
 //Memory
