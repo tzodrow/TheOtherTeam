@@ -5,10 +5,12 @@ module instr_decode(clk,rst_n,instr, alu_opcode, imm, regS_data_ID, regT_data_ID
 	  PC_in, PC_out, dst_reg_WB, dst_reg_data_WB, we);
 
 input clk,rst_n;
-input [31:0]instr, PC_in;
+input [31:0]instr;
+input [21:0] PC_in;
 //input [31:0]regS_data, regT_data; //reg data from the reg file
-input [4:0]dst_reg_WB;
-input [31:0]dst_reg_data_WB;
+
+input [4:0]dst_reg_WB; //from WB
+input [31:0]dst_reg_data_WB; //from WB
 input we; //from WB
 
 output logic hlt;
@@ -16,7 +18,8 @@ output logic hlt;
 
 output logic [2:0]alu_opcode; //to pipleine reg for EX stage\
 output [16:0]imm; //to branch predictor and ID/EX pipeline reg
-output [31:0]regS_data_ID, regT_data_ID, PC_out; 
+output [31:0]regS_data_ID, regT_data_ID;
+output [21:0] PC_out; 
 output [4:0] dst_reg; //sent down the pipeline for WB
 output logic use_imm; //asserted for any instruction which uses immediate values
 output logic use_dst_reg; //asserted if a destination reg is used
