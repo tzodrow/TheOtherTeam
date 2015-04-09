@@ -2,35 +2,348 @@ import getopt
 import sys
 import warnings
 
-opcode = dict(
-    ADD=['00000', 'registers', 'registers', 'registers'],
-    ADDi=['00001', 'registers', 'registers', 'immediate'],
-    SUB=['00010', 'registers', 'registers', 'registers'],
-    SUBi=['00011', 'registers', 'registers', 'immediate'],
-    LW=['00100', 'registers', 'registers', 'immediate'],
-    SW=['00101', 'registers', 'registers', 'immediate'],
-    MOV=['00110', 'registers', 'registers'],
-    MOVi=['00111', 'registers', 'immediate'],
-    AND=['01000', 'registers', 'registers', 'registers'],
-    OR=['01001', 'registers', 'registers', 'registers'],
-    NOR=['01010', 'registers', 'registers', 'registers'],
-    SLL=['01011', 'registers', 'registers', 'immediate'],
-    SRL=['01100', 'registers', 'registers', 'immediate'],
-    SRA=['01101', 'registers', 'registers', 'immediate'],
-    B=['01110', 'condition', 'label'],
-    J=['01111', 'immediate'],
-    JR=['10000', 'register'],
-    JAL=['10001', 'label'],
-    ACT=['10010', 'sprites', 'actions', 'registers'],
-    ACTi=['10010', 'sprites', 'actions', 'immediate'],
-    LD=['10011', 'sprites', 'actions', 'registers'],
-    LDi=['10011'],
-    RD=['10100'],
-    MAP=['10101'],
-    CORD=['10110'],
-    KEY=['10111'],
-    TM=['11000'],
-    HALT=['11111']
+error_msg = "ERROR IN LINE"
+
+
+def check_valid(dictionary, value, arg_num, line_num):
+    if value in dictionary:
+        return True
+    else:
+        warnings.warn("Invalid entry at line " + str(line_num) + " for argument " + str(arg_num), SyntaxWarning)
+        return False
+
+
+def pad(value, length):
+    zeros = length - len(value)
+    if zeros < 0:
+        zeros = -zeros
+        value = value[zeros:]
+    else:
+        for x in range(0, zeros):
+            value = '0' + value
+    return value
+
+
+def add(args, line_num):
+    if len(args) != 3:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if check_valid(registers, args[0], 1, line_num) and check_valid(registers, args[1], 2, line_num) \
+            and check_valid(registers, args[2], 3, line_num):
+        return '00000' + registers[args[0]] + registers[args[1]] + registers[args[2]] + pad("0", 12)
+    else:
+        return error_msg
+
+
+def addi(args, line_num):
+    if len(args) != 3:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if check_valid(registers, args[0], 1, line_num) and check_valid(registers, args[1], 2, line_num) \
+            and isinstance(int(args[2]), int):
+        return '00001' + registers[args[0]] + registers[args[1]] + pad(bin(int(args[2]))[2:], 17)
+    else:
+        return error_msg
+
+
+def sub(args, line_num):
+    if len(args) != 3:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if check_valid(registers, args[0], 1, line_num) and check_valid(registers, args[1], 2, line_num) \
+            and check_valid(registers, args[2], 3, line_num):
+        return '00010' + registers[args[0]] + registers[args[1]] + registers[args[2]] + pad("0", 12)
+    else:
+        return error_msg
+
+
+def subi(args, line_num):
+    if len(args) != 3:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if check_valid(registers, args[0], 1, line_num) and check_valid(registers, args[1], 2, line_num) \
+            and isinstance(int(args[2]), int):
+        return '00011' + registers[args[0]] + registers[args[1]] + pad(bin(int(args[2]))[2:], 17)
+    else:
+        return error_msg
+
+
+def lw(args, line_num):
+    if len(args) != 3:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if check_valid(registers, args[0], 1, line_num) and check_valid(registers, args[1], 2, line_num) \
+            and isinstance(int(args[2]), int):
+        return '00100' + registers[args[0]] + registers[args[1]] + pad(bin(int(args[2]))[2:], 17)
+    else:
+        return error_msg
+
+
+def sw(args, line_num):
+    if len(args) != 3:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if check_valid(registers, args[0], 1, line_num) and check_valid(registers, args[1], 2, line_num) \
+            and isinstance(int(args[2]), int):
+        return '00101' + registers[args[0]] + registers[args[1]] + pad(bin(int(args[2]))[2:], 17)
+    else:
+        return error_msg
+
+
+def mov(args, line_num):
+    if len(args) != 2:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if check_valid(registers, args[0], 1, line_num) and check_valid(registers, args[1], 2, line_num):
+        return '00110' + registers[args[0]] + registers[args[1]] + pad("0", 17)
+    else:
+        return error_msg
+
+
+def movi(args, line_num):
+    if len(args) != 3:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if isinstance(int(args[0]), int) and check_valid(registers, args[1], 2, line_num) \
+            and isinstance(int(args[2]), int):
+        return '00111' + registers[args[1]] + pad(bin(int(args[0]))[2:], 2) + pad(bin(int(args[2]))[2:], 8) \
+               + pad("0", 12)
+    else:
+        return error_msg
+
+
+def andi(args, line_num):
+    if len(args) != 3:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if check_valid(registers, args[0], 1, line_num) and check_valid(registers, args[1], 2, line_num) \
+            and check_valid(registers, args[2], 3, line_num):
+        return '01000' + registers[args[0]] + registers[args[1]] + registers[args[2]] + pad("0", 12)
+    else:
+        return error_msg
+
+
+def ori(args, line_num):
+    if len(args) != 3:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if check_valid(registers, args[0], 1, line_num) and check_valid(registers, args[1], 2, line_num) \
+            and check_valid(registers, args[2], 3, line_num):
+        return '01001' + registers[args[0]] + registers[args[1]] + registers[args[2]] + pad("0", 12)
+    else:
+        return error_msg
+
+
+def nor(args, line_num):
+    if len(args) != 3:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if check_valid(registers, args[0], 1, line_num) and check_valid(registers, args[1], 2, line_num) \
+            and check_valid(registers, args[2], 3, line_num):
+        return '01010' + registers[args[0]] + registers[args[1]] + registers[args[2]] + pad("0", 12)
+    else:
+        return error_msg
+
+
+def sll(args, line_num):
+    if len(args) != 3:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if check_valid(registers, args[0], 1, line_num) and check_valid(registers, args[1], 2, line_num) \
+            and isinstance(int(args[2]), int):
+        return '01011' + registers[args[0]] + registers[args[1]] + pad(bin(int(args[2]))[2:], 17)
+    else:
+        return error_msg
+
+
+def srl(args, line_num):
+    if len(args) != 3:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if check_valid(registers, args[0], 1, line_num) and check_valid(registers, args[1], 2, line_num) \
+            and isinstance(int(args[2]), int):
+        return '01100' + registers[args[0]] + registers[args[1]] + pad(bin(int(args[2]))[2:], 17)
+    else:
+        return error_msg
+
+
+def sra(args, line_num):
+    if len(args) != 3:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if check_valid(registers, args[0], 1, line_num) and check_valid(registers, args[1], 2, line_num) \
+            and isinstance(int(args[2]), int):
+        return '01101' + registers[args[0]] + registers[args[1]] + pad(bin(int(args[2]))[2:], 17)
+    else:
+        return error_msg
+
+
+def b(args, line_num):
+    if len(args) != 2:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if check_valid(conditions, args[0], 1, line_num) and check_valid(labels, args[1], 2, line_num):
+        return '01110' + conditions[args[0]] + pad("0", 2) + pad(bin(int(labels[args[1]]))[2:], 22)
+    else:
+        return error_msg
+
+
+def j():
+    print 'NO IMPLEMENTED'
+
+
+def jr(args, line_num):
+    if len(args) != 1:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if check_valid(registers, args[0], 1, line_num):
+        return '10000' + registers[args[0]] + pad("0", 22)
+    else:
+        return error_msg
+
+
+def jal(args, line_num):
+    if len(args) != 1:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if check_valid(labels, args[0], 1, line_num):
+        return '10001' + pad(bin(labels[args[0]])[2:], 27)
+    else:
+        return error_msg
+
+
+def act(args, line_num):
+    if len(args) != 3:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if isinstance(int(args[0]), int) and check_valid(actions, args[1], 2, line_num) \
+            and check_valid(registers, args[2], 3, line_num):
+        return '10010' + actions[args[1]] + pad(bin(int(args[0]))[2:], 8) + registers[args[2]] + pad("0", 10)
+    else:
+        return error_msg
+
+
+def acti(args, line_num):
+    if len(args) != 3:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if isinstance(int(args[0]), int) and check_valid(actions, args[1], 2, line_num) \
+            and isinstance(int(args[2]), int):
+        return '10010' + actions[args[1]] + pad(bin(int(args[0]))[2:], 8) + pad(bin(int(args[2]))[2:], 14) + "1"
+    else:
+        return error_msg
+
+
+def ld(args, line_num):
+    if len(args) != 3:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if isinstance(int(args[0]), int) and check_valid(attributes, args[1], 2, line_num) \
+            and check_valid(registers, args[2], 3, line_num):
+        return '10011' + attributes[args[1]] + pad(bin(int(args[0]))[2:], 8) + registers[args[2]] + pad("0", 10)
+    else:
+        return error_msg
+
+
+def ldi(args, line_num):
+    if len(args) != 3:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if isinstance(int(args[0]), int) and check_valid(attributes, args[1], 2, line_num) \
+            and isinstance(int(args[2]), int):
+        return '10011' + attributes[args[1]] + pad(bin(int(args[0]))[2:], 8) + pad(bin(int(args[2]))[2:], 14) + "1"
+    else:
+        return error_msg
+
+
+def rdi(args, line_num):
+    if len(args) != 3:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if isinstance(int(args[0]), int) and check_valid(attributes, args[1], 2, line_num) \
+            and check_valid(registers, args[2], 3, line_num):
+        return '10100' + attributes[args[1]] + pad(bin(int(args[0]))[2:], 8) + registers[args[2]] + pad("0", 10)
+    else:
+        return error_msg
+
+
+def mapi(args, line_num):
+    if len(args) != 1:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if isinstance(int(args[0]), int):
+        return '10101' + pad("0", 12) + pad(bin(int(args[0]))[2:], 14) + "1"
+    else:
+        return error_msg
+
+
+def cord(args, line_num):
+    if len(args) != 2:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if isinstance(int(args[0]), int) and check_valid(registers, args[1], 2, line_num):
+        return '10110' + pad("0", 4) + pad(bin(int(args[0]))[2:], 8) + registers[args[1]] + pad("0", 10)
+    else:
+        return error_msg
+
+
+def key(args, line_num):
+    if len(args) != 1:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if check_valid(registers, args[0], 2, line_num):
+        return '10111' + registers[args[0]] + pad("0", 22)
+    else:
+        return error_msg
+
+
+def tm(args, line_num):
+    if len(args) != 1:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    if isinstance(int(args[0]), int):
+        return '11000' + pad("0", 12) + pad(bin(int(args[0]))[2:], 14) + "1"
+    else:
+        return error_msg
+
+
+def halt(args, line_num):
+    if len(args) != 0:
+        warnings.warn("Invalid Number of arguments at line " + str(line_num), SyntaxWarning)
+        return error_msg
+    else:
+        return '11111' + pad("0", 27)
+
+
+opcodes = dict(
+    ADD=add,
+    ADDI=addi,
+    SUB=sub,
+    SUBI=subi,
+    LW=lw,
+    SW=sw,
+    MOV=mov,
+    MOVI=movi,
+    AND=andi,
+    OR=ori,
+    NOR=nor,
+    SLL=sll,
+    SRL=srl,
+    SRA=sra,
+    B=b,
+    J=j,
+    JR=jr,
+    JAL=jal,
+    ACT=act,
+    ACTI=acti,
+    LD=ld,
+    LDI=ldi,
+    RD=rdi,
+    MAP=mapi,
+    CORD=cord,
+    KEY=key,
+    TM=tm,
+    HALT=halt
 )
 
 registers = dict(
@@ -92,7 +405,7 @@ actions = dict(
     ATK='0111'
 )
 
-condition = dict(
+conditions = dict(
     NEQ='000',
     EQ='001',
     GT='010',
@@ -128,16 +441,42 @@ hex_digits = {
     'f': "1111"
 }
 
-def process(line, outfile):
+labels = dict()
+
+
+def find_labels(line, line_num):
     args = line.split()
-    # TODO: Parse out labels
-    op = opcode.get(args[0], "BAD")
-    if op == "BAD":
-        warnings.warn("Bad arguments received", SyntaxWarning)
+    label = args[0].upper()
+    if not (label in opcodes):
+        if label in labels:
+            warnings.warn("Label Repeated at line " + str(line_num), SyntaxWarning)
+            return False
+        else:
+            labels[label] = line_num
+            return True
     else:
-        print args
-    print op
-    outfile.write("%s\n" % op)
+        return True
+
+
+def process(line, outfile, line_num):
+    args = line.split()
+    if not args[0].upper() in opcodes:
+        if args[0].upper() in labels:
+            args.pop(0)
+        else:
+            warnings.warn("Label (" + args[0] + ") Repeated at line " + str(line_num), SyntaxWarning)
+
+    opcode = args.pop(0).upper()
+    if opcode in opcodes:
+        instr = opcodes[opcode](args, line_num)
+        if instr != error_msg:
+            print instr
+            outfile.write("%s\n" % instr)
+        else:
+            print error_msg + ": " + line
+            outfile.write("%s\n" % error_msg + ": " + line)
+    else:
+        warnings.warn("Opcode(" + opcode + ") does not exist at line " + str(line_num), SyntaxWarning)
 
 
 def main(argv):
@@ -159,9 +498,20 @@ def main(argv):
 
     f = open(inputfile, 'r')
     o = open(outputfile, 'w')
+
+    line_counter = 0
     for line in f:
-        process(line, o)
+        find_labels(line, line_counter)
+        line_counter += 1
     f.close()
+
+    f = open(inputfile, 'r')
+    line_counter = 0
+    for line in f:
+        process(line, o, line_counter)
+        line_counter += 1
+    f.close()
+    o.close()
 
 
 if __name__ == "__main__":
