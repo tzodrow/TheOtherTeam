@@ -8,6 +8,10 @@ module MEM(clk, rst_n, mem_data, addr, cmd, sprite_data, sprite_ALU_select, mem_
 	output cache_hit, mem_ALU_WB_select, branch_taken;
 	output [31:0] sprite_ALU_result, mem_result;
 	
+	//cmd 1 = write enable, 0 = read enable
+	wire re;
+	wire we;
+	
 	//branch opcodes
 	localparam NEQ = 3'b000;
 	localparam EQ = 3'b001;
@@ -17,9 +21,24 @@ module MEM(clk, rst_n, mem_data, addr, cmd, sprite_data, sprite_ALU_select, mem_
 	localparam LTE = 3'b101;
 	localparam OVFL = 3'b110;
 	localparam UNCOND = 3'b111;
-		
-	mainMemory mainMem(.clk(clk),.rst_n(rst_n),.data(mem_data),.addr(addr),.cmd(cmd), //Inputs
-					 .result(mem_result),.cache_hit(cache_hit)); //Outputs
+	
+	always @(*) begin
+		if(cmd) begin
+			re = 0;
+			we = 1;
+		end
+		else begin
+			re = 1;
+			we = 0;
+		end
+	end 
+	//Simple memory 
+	mainMem(.clk(clk),.addr(addr),.re(re),.we(we),.wrt_data(mem_data),.rd_data(mem_result);
+	
+	
+	//This will be for the memory with cache	
+	/*mainMemory mainMem(.clk(clk),.rst_n(rst_n),.data(mem_data),.addr(addr),.cmd(cmd), //Inputs
+					 .result(mem_result),.cache_hit(cache_hit)); //Outputs*/
 	
 	assign sprite_ALU_result = (sprite_ALU_select) ? mem_data : sprite_data;
 	
