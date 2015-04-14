@@ -1,4 +1,4 @@
-module MEM(clk, rst_n, mem_data, addr, cmd, sprite_data, sprite_ALU_select, mem_ALU_select, flag_ov, flag_neg, flag_zero, branch_condition, //Inputs
+module MEM(clk, rst_n, mem_data, addr, re, we, sprite_data, sprite_ALU_select, mem_ALU_select, flag_ov, flag_neg, flag_zero, branch_condition, //Inputs
 		   cache_hit, mem_ALU_WB_select, sprite_ALU_result, mem_result, branch_taken); //Outputs
 		   
 	input clk ,rst_n, cmd, sprite_ALU_select, mem_ALU_select, flag_ov, flag_neg, flag_zero;
@@ -7,10 +7,6 @@ module MEM(clk, rst_n, mem_data, addr, cmd, sprite_data, sprite_ALU_select, mem_
 	input [21:0] addr;
 	output cache_hit, mem_ALU_WB_select, branch_taken;
 	output [31:0] sprite_ALU_result, mem_result;
-	
-	//cmd 1 = write enable, 0 = read enable
-	wire re;
-	wire we;
 	
 	//branch opcodes
 	localparam NEQ = 3'b000;
@@ -21,17 +17,8 @@ module MEM(clk, rst_n, mem_data, addr, cmd, sprite_data, sprite_ALU_select, mem_
 	localparam LTE = 3'b101;
 	localparam OVFL = 3'b110;
 	localparam UNCOND = 3'b111;
+
 	
-	always @(*) begin
-		if(cmd) begin
-			re = 0;
-			we = 1;
-		end
-		else begin
-			re = 1;
-			we = 0;
-		end
-	end 
 	//Simple memory 
 	mainMem(.clk(clk),.addr(addr),.re(re),.we(we),.wrt_data(mem_data),.rd_data(mem_result);
 	
