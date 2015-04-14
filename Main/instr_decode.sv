@@ -1,7 +1,7 @@
 module instr_decode(clk,rst_n,instr, alu_opcode, imm, regS_data_ID, regT_data_ID, use_imm,
 	  use_dst_reg, is_branch_instr, update_neg, update_carry, update_overflow, update_zero, sprite_addr, 
 	  sprite_action, sprite_use_imm, sprite_imm, /*sprite_reg_data,*/ sprite_re, sprite_we, sprite_use_dst_reg, IOR, dst_reg, hlt,
-	  PC_in, PC_out, dst_reg_WB, dst_reg_data_WB, we, branch_addr, branch_conditions, mem_alu_select, mem_we, mem_re);
+	  PC_in, PC_out, dst_reg_WB, dst_reg_data_WB, we, branch_addr, branch_conditions, mem_alu_select, mem_we, mem_re, use_sprite_mem);
 
 input clk,rst_n;
 input [31:0]instr;
@@ -36,7 +36,7 @@ output [13:0]sprite_imm;
 //output [31:0]sprite_reg_data;
 output logic sprite_re, sprite_we, sprite_use_dst_reg;
 output logic IOR;//read signal for spart
-
+output logic use_sprite_mem;
 
 logic reT, reS; //Reg read enable signals sent to the reg file
 wire [4:0]regS_addr, regT_addr; //to the reg file 
@@ -129,7 +129,8 @@ always_comb begin
  update_carry = 0; 
  update_overflow = 0; 
  update_zero = 0;
-
+ use_sprite_mem = 0;
+ 
  mem_alu_select = 0; 
  mem_we = 0;
  mem_re = 0;
@@ -311,6 +312,7 @@ always_comb begin
 	sprite_re = 1;
 	sprite_use_dst_reg = 1;
 	rd_instr = 1;
+	use_sprite_mem = 1;
 	end
 
 	MAP : begin
@@ -321,6 +323,7 @@ always_comb begin
 	sprite_re = 1;
 	sprite_use_dst_reg = 1;
 	cord_instr = 1;
+	use_sprite_mem = 1;
 	end
 
 	KEY : begin
