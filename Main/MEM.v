@@ -9,8 +9,8 @@ module MEM(clk, rst_n, mem_data, addr, cmd, sprite_data, sprite_ALU_select, mem_
 	output [31:0] sprite_ALU_result, mem_result;
 	
 	//cmd 1 = write enable, 0 = read enable
-	wire re;
-	wire we;
+	reg re;
+	reg we;
 	
 	//branch opcodes
 	localparam NEQ = 3'b000;
@@ -33,7 +33,7 @@ module MEM(clk, rst_n, mem_data, addr, cmd, sprite_data, sprite_ALU_select, mem_
 		end
 	end 
 	//Simple memory 
-	mainMem(.clk(clk),.addr(addr),.re(re),.we(we),.wrt_data(mem_data),.rd_data(mem_result);
+	mainMem mainMemory(.clk(clk),.addr(addr),.re(re),.we(we),.wrt_data(mem_data),.rd_data(mem_result));
 	
 	
 	//This will be for the memory with cache	
