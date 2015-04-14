@@ -1,14 +1,14 @@
-module EX_MEM_pipeline_reg(clk, rst_n, hlt, stall, flush, EX_ov, EX_neg, EX_zero, EX_use_dst_reg, EX_branch_conditions, EX_dst_reg, EX_PC, EX_PC_out, EX_instr, EX_ALU_result, EX_sprite_data, EX_s_data, EX_re, EX_we, //Inputs
-							MEM_sprite_ALU_select, MEM_mem_ALU_select, MEM_flag_ov, MEM_flag_neg, MEM_flag_zero, MEM_re, MEM_we, MEM_addr, MEM_PC, MEM_PC_out, MEM_data, MEM_sprite_data, MEM_instr, MEM_branch_cond);  //Outputs
+module EX_MEM_pipeline_reg(clk, rst_n, hlt, stall, flush, EX_ov, EX_neg, EX_zero, EX_use_dst_reg, EX_branch_conditions, EX_dst_reg, EX_PC, EX_PC_out, EX_instr, EX_ALU_result, EX_sprite_data, EX_s_data, EX_re, EX_we, EX_mem_ALU_select, EX_use_sprite_mem, //Inputs
+							MEM_sprite_ALU_select, MEM_mem_ALU_select, MEM_flag_ov, MEM_flag_neg, MEM_flag_zero, MEM_re, MEM_we, MEM_addr, MEM_PC, MEM_PC_out, MEM_data, MEM_sprite_data, MEM_instr, MEM_branch_cond, MEM_use_dst_reg);  //Outputs
 
-input clk, rst_n, stall, flush, hlt, EX_re, EX_we;
-input EX_ov, EX_neg, EX_zero, EX_use_dst_reg;
+input clk, rst_n, stall, flush, hlt;
+input EX_ov, EX_neg, EX_zero, EX_use_dst_reg, EX_re, EX_we, EX_mem_ALU_select, EX_use_sprite_mem;
 input [2:0] EX_branch_conditions;
 input [4:0] EX_dst_reg;
 input [21:0] EX_PC, EX_PC_out;
 input [31:0] EX_instr, EX_ALU_result, EX_sprite_data, EX_s_data;
 
-output reg MEM_sprite_ALU_select, MEM_mem_ALU_select, MEM_flag_ov, MEM_flag_neg, MEM_flag_zero, MEM_re, MEM_we;
+output reg MEM_sprite_ALU_select, MEM_mem_ALU_select, MEM_flag_ov, MEM_flag_neg, MEM_flag_zero, MEM_re, MEM_we, MEM_use_dst_reg;
 output reg[2:0] MEM_branch_cond;
 output reg[4:0] MEM_addr;
 output reg[21:0] MEM_PC, MEM_PC_out;
@@ -28,6 +28,7 @@ always @(posedge clk, negedge rst_n)
 		MEM_data <= 0;
 		MEM_sprite_data <= 0;
 		MEM_instr <= 0;
+		MEM_use_sprite_mem <= 0;
 	end
 	else if (flush) begin
 		MEM_sprite_ALU_select <= 0;
@@ -42,9 +43,10 @@ always @(posedge clk, negedge rst_n)
 		MEM_data <= 0;
 		MEM_sprite_data <= 0;
 		MEM_instr <= 0;
+		MEM_use_sprite_mem <= 0;
 	end 
 	else if (!stall & !hlt) begin
-		MEM_sprite_ALU_select <= EX_use_dst_reg;
+		MEM_sprite_ALU_select <= EX_use_sprite_mem;
 		MEM_mem_ALU_select <= EX_mem_ALU_select                  
 		MEM_flag_ov <= EX_ov; 
 		MEM_flag_neg <= EX_neg;
@@ -58,6 +60,7 @@ always @(posedge clk, negedge rst_n)
 		MEM_sprite_data <= EX_sprite_data;
 		MEM_instr <= EX_instr; 
 		MEM_branch_cond <= EX_branch_conditions;
+		MEM_use_dst_reg <= EX_use_dst_reg;
 	end  
 	  
 endmodule 
