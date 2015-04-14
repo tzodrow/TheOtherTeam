@@ -76,10 +76,12 @@ module EX(
 	assign flag_neg = update_flag_neg ? neg : flag_neg;
 	
 	//SPRITE MEM STUFF
-	assign sprite_write_data = sprite_use_imm ? sprite_imm[7:0] : src0[7:0];
+	assign sprite_write_data = sprite_use_imm ? sprite_imm[13:0] : src0[13:0];
 	
 	
 	//assign sprite_address = //sprite address calculation based on sprite_addr and sprite_fcn(attribute) 
-	//sprite_mem(sprite_fcn, sprite_addr, sprite_write_data, sprite_re, sprite_we, sprite_data);
+	   
+	   //instantiate sprite_mem as a separate module and declare the x-core generated mem inside it
+	//sprite_mem(sprite_action, sprite_addr, sprite_write_data, sprite_re, sprite_we, sprite_data);
 		
 endmodule	
