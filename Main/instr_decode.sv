@@ -27,11 +27,8 @@ output [21:0] PC_out; //PC simply passed along the pipeline
 output [4:0] dst_reg; //sent down the pipeline for WB
 output logic use_imm; //asserted for any instruction which uses immediate values
 output logic use_dst_reg; //asserted if a destination reg is used
-
-
-
-
-
+output logic mem_alu_select; 
+output logic mem_we, mem_re;
 
 output [7:0]sprite_addr; //tells EX which sprite it's accessing
 output [3:0]sprite_action;
@@ -39,7 +36,7 @@ output sprite_use_imm;
 output [13:0]sprite_imm;
 //output [31:0]sprite_reg_data;
 output logic sprite_re, sprite_we, sprite_use_dst_reg;
-output logic IOR;// use_alu; //read signal for spart
+output logic IOR;//read signal for spart
 
 
 logic reT, reS; //Reg read enable signals sent to the reg file
@@ -134,6 +131,9 @@ always_comb begin
  update_overflow = 0; 
  update_zero = 0;
 
+ mem_alu_select = 0; 
+ mem_we = 0;
+ mem_re = 0;
  //use_alu = 0;
 
  sprite_re = 0;
@@ -146,7 +146,7 @@ always_comb begin
  IOR = 0;
 
   case (opcode)
-   	ADD : begin
+   ADD : begin
  	reT = 1;
  	reS = 1;
 	use_dst_reg = 1;
@@ -200,11 +200,14 @@ always_comb begin
 
 	LW : begin
  	reS = 1;
+   mem_re = 1;
+ 	mem_alu_select = 1;
 	use_dst_reg = 1;
 	end	
 	
 	SW : begin
  	reS = 1;
+ 	mem_we = 1;
 	end
 
 	MOV : begin
@@ -334,5 +337,3 @@ always_comb begin
 end
 
 endmodule
-  
-  
