@@ -61,6 +61,9 @@ module spu_controller_tb();
 			$display("Error: Draw Score Start not asserted");
 			$stop();
 		end
+
+		$display("Finished, no errors");
+		$stop();
 	end
 		
 		

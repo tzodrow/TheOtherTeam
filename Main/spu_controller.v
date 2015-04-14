@@ -23,7 +23,7 @@ module spu_controller(
 		else
 			state <= nxt_state;
 		
-	always begin
+	always @ (*) begin
 		draw_map_start = 0;
 		draw_sprite_start = 0;
 		draw_score_start = 0;
@@ -49,6 +49,9 @@ module spu_controller(
 				if(draw_sprite_done) begin
 					nxt_state = DRAW_SCORE;
 					draw_score_start = 1;
+				end
+				else begin
+					nxt_state = DRAW_SPRITE;
 				end
 			end
 			DRAW_SCORE : begin
