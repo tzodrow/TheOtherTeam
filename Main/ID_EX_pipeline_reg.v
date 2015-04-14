@@ -1,10 +1,11 @@
 module ID_EX_pipeline_reg(clk, rst_n, stall, hlt, flush, ID_PC, ID_PC_out, ID_instr, ID_s_data, ID_t_data, ID_use_imm, 
 	ID_use_dst_reg, ID_update_neg, ID_update_carry, ID_update_ov, ID_update_zero, ID_alu_opcode, ID_branch_conditions,
 	ID_imm, ID_dst_reg, ID_sprite_addr, ID_sprite_action, ID_sprite_use_imm, ID_sprite_re, ID_sprite_we, 
-	ID_sprite_use_dst_reg, ID_sprite_imm, ID_mem_alu_select, ID_mem_we, ID_mem_re, EX_PC, EX_PC_out, EX_instr, EX_s_data, EX_t_data, EX_use_imm, 
+	ID_sprite_use_dst_reg, ID_sprite_imm, ID_mem_alu_select, ID_mem_we, ID_mem_re, ID_use_sprite_mem, EX_PC, EX_PC_out, 
+	EX_instr, EX_s_data, EX_t_data, EX_use_imm, 
 	EX_use_dst_reg, EX_update_neg, EX_update_carry, EX_update_ov, EX_update_zero, EX_alu_opcode, EX_branch_conditions,
 	EX_imm, EX_dst_reg, EX_sprite_addr, EX_sprite_action, EX_sprite_use_imm, EX_sprite_re, EX_sprite_we, 
-	EX_sprite_use_dst_reg, EX_sprite_imm, EX_mem_alu_select, EX_mem_we, EX_mem_re);
+	EX_sprite_use_dst_reg, EX_sprite_imm, EX_mem_alu_select, EX_mem_we, EX_mem_re, EX_use_sprite_mem);
 
 
 
@@ -23,7 +24,7 @@ input ID_mem_alu_select, ID_mem_we, ID_mem_re;
 //sprite inputs
 input[7:0] ID_sprite_addr;
 input[3:0] ID_sprite_action;
-input ID_sprite_use_imm, ID_sprite_re, ID_sprite_we, ID_sprite_use_dst_reg;
+input ID_sprite_use_imm, ID_sprite_re, ID_sprite_we, ID_sprite_use_dst_reg, ID_use_sprite_mem;
 input[13:0] ID_sprite_imm;
 
 
@@ -38,7 +39,7 @@ output reg EX_mem_alu_select, EX_mem_we, EX_mem_re;
 //sprite outputs
 output reg[7:0] EX_sprite_addr;
 output reg[3:0] EX_sprite_action;
-output reg EX_sprite_use_imm, EX_sprite_re, EX_sprite_we, EX_sprite_use_dst_reg;
+output reg EX_sprite_use_imm, EX_sprite_re, EX_sprite_we, EX_sprite_use_dst_reg, EX_use_sprite_mem;
 output reg[13:0] EX_sprite_imm;
 
 always @(posedge clk, negedge rst_n)
