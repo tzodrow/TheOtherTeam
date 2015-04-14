@@ -8,13 +8,6 @@ module MEM(clk, rst_n, mem_data, addr, re, we, sprite_data, sprite_ALU_select, m
 	output cache_hit, mem_ALU_WB_select, branch_taken;
 	output [31:0] sprite_ALU_result, mem_result;
 	
-<<<<<<< HEAD
-=======
-	//cmd 1 = write enable, 0 = read enable
-	reg re;
-	reg we;
-	
->>>>>>> origin/master
 	//branch opcodes
 	localparam NEQ = 3'b000;
 	localparam EQ = 3'b001;
