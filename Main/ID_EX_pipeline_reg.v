@@ -69,6 +69,7 @@ always @(posedge clk, negedge rst_n)
 	 EX_mem_alu_select <= 0;
 	 EX_mem_we <= 0; 
 	 EX_mem_re <= 0;
+	 EX_use_sprite_mem <= 0;
 	end
 	else if (flush) begin
 	 EX_PC <= 0;
@@ -96,6 +97,7 @@ always @(posedge clk, negedge rst_n)
 	 EX_mem_alu_select <= 0;
 	 EX_mem_we <= 0; 
 	 EX_mem_re <= 0;
+	 EX_use_sprite_mem <= 0;
 	end
 	else if (!stall & !hlt) begin
 	 EX_PC <= ID_PC;
@@ -123,6 +125,7 @@ always @(posedge clk, negedge rst_n)
 	 EX_mem_alu_select <= ID_mem_alu_select;
 	 EX_mem_we <= ID_mem_we; 
 	 EX_mem_re <= ID_mem_re;
+	 EX_use_sprite_mem <= ID_use_sprite_mem;
 	end
 
 
