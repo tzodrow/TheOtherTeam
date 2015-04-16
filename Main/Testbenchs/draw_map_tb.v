@@ -5,7 +5,7 @@ module draw_map_tb();
 	reg stm_clk, stm_rst_n, stm_start, stm_mem_rdy, stm_frame_rdy;
 	wire [31:0] frame_data_mon;
 	wire [18:0] addr_mon;
-	wire done_mon, mem_re_mon, frame_we_mon, frame_data_mon;
+	wire done_mon, mem_re_mon, frame_we_mon;
 	
 	draw_map dm0(
 		.clk(stm_clk),
@@ -26,7 +26,7 @@ module draw_map_tb();
 		#5 stm_clk <= ~stm_clk;
 		
 	initial begin
-		stm_rst = 1;
+		stm_rst_n = 0;
 		stm_clk = 0;
 		stm_start = 0;
 		stm_base_addr = 0;
@@ -36,7 +36,7 @@ module draw_map_tb();
 		stm_frame_rdy = 0;
 		
 		repeat(2) @ (posedge stm_clk);
-		stm_rst = 0;
+		stm_rst_n = 1;
 		
 		@(posedge stm_clk);
 		stm_start = 1;
@@ -71,6 +71,9 @@ module draw_map_tb();
 			end
 			
 		end
+
+		$display("All done, finished correctly!");
+		$stop();
 	end
 	
 endmodule

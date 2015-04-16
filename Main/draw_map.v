@@ -18,7 +18,7 @@ module draw_map(
 	localparam WRITE_FRAME_BUFFER = 2'b10;
 	localparam INC_ADDR = 2'b11;
 	
-	localparam HEX_3072000 = 18'h4B000 - 1; // 307,200 = 480 x 640
+	localparam HEX_3072000 = 19'h4B000 - 1; // 307,200 = 480 x 640
 	
 	reg [1:0] state, nxt_state;
 	reg ld_addr, inc_addr, ld_frame_data;
@@ -54,7 +54,7 @@ module draw_map(
 			counter <= counter + 1;
 		
 	always @ (*) begin
-		rst_addr = 0;
+		ld_addr = 0;
 		inc_addr = 0;
 		ld_frame_data = 0;
 		done = 0;
@@ -91,7 +91,7 @@ module draw_map(
 					frame_we = 1;
 					inc_addr = 1;
 					inc_counter = 1;
-					if(counter == HEX_307200) begin
+					if(counter == HEX_3072000) begin
 						nxt_state = IDLE;
 					end
 					else begin
