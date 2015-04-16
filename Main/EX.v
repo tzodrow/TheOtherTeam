@@ -1,10 +1,11 @@
 module EX(
    input clk,
+   input rst_n,
 	input[2:0] alu_opcode,
 	input update_flag_ov,
 	input update_flag_neg,
 	input update_flag_zero,
-	input update_flag_carry,
+	input update_flag_carry, //unused
 	input[31:0] t,
 	input[31:0] s,
 	input[16:0] imm,
@@ -18,10 +19,10 @@ module EX(
 	input sprite_use_dst_reg,
 	output[31:0] ALU_result,
 	output[31:0] sprite_data,
-	output flag_ov,
-	output flag_neg,
-	output flag_zero,
-	output flag_carry
+	output reg flag_ov,
+	output reg flag_neg,
+	output reg flag_zero,
+	output reg carry //unused
 	);
 	
 	localparam ALU_OP_ADD = 3'b000;
@@ -35,7 +36,7 @@ module EX(
 	
 	wire[7:0] sprite_write_data; 
 	wire[31:0] src0, src1, src1Not, mathResult, shiftInter; 
-	wire ov, neg, zero, carry;
+	wire ov, neg, zero;
 	
 	assign src0 = s; 
 	assign src1 = use_imm ? {{15{imm[16]}}, imm} : t; 
@@ -46,9 +47,9 @@ module EX(
 	assign shiftInter = $signed(src0) >>> imm[4:0]; 	  //arithmetic shift
 	
 	//Do math w/ saturation
-	assign {carry, mathResult} =  (alu_opcode == ALU_OP_ADD)	? (src0 + src1)		:   
+	assign mathResult =  (alu_opcode == ALU_OP_ADD)	? (src0 + src1)		:   
 						                   (alu_opcode == ALU_OP_SUB)	?	(src1Not + src0 + 1)	: //carry in a 1 for subtraction and use negated src1
-						                   {1'b0, 32'b0};   
+						                   32'b0;   
 
     //determines if overflow occurred based on the MSBs of src0 and src1 and the results of the intermediate math op above
 	assign	ov		=	(alu_opcode == ALU_OP_ADD) ? 
@@ -69,11 +70,22 @@ module EX(
 			(alu_opcode == ALU_OP_SLL)  ? src0 << src1[4:0]     :
 			(alu_opcode == ALU_OP_SRL)  ? src0 >> src1[4:0]     :
 			(alu_opcode == ALU_OP_SRA)  ? shiftInter    : ALU_result;
-			
-	assign flag_carry = update_flag_carry ? carry : flag_carry;
-	assign flag_ov = update_flag_ov ? ov : flag_ov;
-	assign flag_zero = update_flag_zero ? zero : flag_zero;
-	assign flag_neg = update_flag_neg ? neg : flag_neg;
+	
+	always@(posedge clk, negedge rst_n) begin
+	   if(!rst_n) begin    
+	      flag_ov <= 1'b0;
+	      flag_zero <= 1'b0;
+	      flag_neg <= 1'b0;
+	   end
+	   else begin
+	      if(update_flag_ov) flag_ov <= ov;
+	      else flag_ov <= flag_ov;	         
+	      if(update_flag_zero) flag_zero <= zero;
+	      else flag_zero <= flag_zero;	       
+	      if(update_flag_neg) flag_neg <= neg;
+	      else flag_neg <= flag_neg;
+	   end
+	end
 	
 	//SPRITE MEM STUFF
 	assign sprite_write_data = sprite_use_imm ? sprite_imm[13:0] : src0[13:0];

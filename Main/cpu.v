@@ -133,7 +133,7 @@ ID_EX_pipeline_reg ID_EX_pipeline_Test(clk, rst_n, .stall(), .hlt(), .flush(), .
 
 
 //EX Module Declaration
-EX EX(.clk(clk), .alu_opcode(EX_alu_opcode), .update_ov(EX_update_ov), .update_neg(EX_update_neg), .update_zero(EX_update_zero), .update_carry(EX_update_carry),
+EX EX(.clk(clk), .rst_n(rst_n), .alu_opcode(EX_alu_opcode), .update_ov(EX_update_ov), .update_neg(EX_update_neg), .update_zero(EX_update_zero), .update_carry(EX_update_carry),
            .t_data(EX_t_data), .s_data(EX_s_data), .imm(EX_imm), .use_imm(EX_use_imm), .sprite_action(EX_sprite_action), .sprite_imm(EX_sprite_imm), 
 	   .sprite_use_imm(EX_sprite_use_imm), .sprite_addr(EX_sprite_addr),.sprite_re(EX_sprite_re), .sprite_we(EX_sprite_we), .sprite_use_dst_reg(EX_sprite_use_dst_reg), // < ^inputs 
 	   .ALU_result(EX_ALU_result), .sprite_data(EX_sprite_data), .ov(EX_ov), .neg(EX_neg), .zero(EX_zero), .carry(EX_carry) //outputs
