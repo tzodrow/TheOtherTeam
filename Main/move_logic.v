@@ -1,4 +1,4 @@
-module move_logic(input clk, input rst_n, input start, input[31:0] sprite_data_data, input draw_sprite_rdy,   
+module move_logic(input clk, input rst_n, input start, input[31:0] sprite_data, input draw_sprite_rdy,   
    output reg draw_sprite_start, 
    output reg sprite_data_re, output reg sprite_data_we, output reg[23:0] sprite_data_address, output reg[18:0] sprite_data_coord_write);
 
