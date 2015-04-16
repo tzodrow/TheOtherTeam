@@ -1,6 +1,6 @@
-module move_logic(input clk, input rst_n, input start, input[31:0] sprite_data_data, input draw_sprite_rdy,   
+module move_logic(input clk, input rst_n, input start, input[63:0] sprite_data_read_data, input draw_sprite_rdy,   
    output reg draw_sprite_start, 
-   output reg sprite_data_re, output reg sprite_data_we, output reg[23:0] sprite_data_address, output reg[18:0] sprite_data_coord_write);
+   output reg sprite_data_re, output reg sprite_data_we, output reg[7:0] sprite_data_address, output reg[63:0] sprite_data_write_data);
 
    localparam IDLE = 3'b000;
    localparam GET_SPRITE_NUM = 3'b001;
@@ -20,12 +20,7 @@ module move_logic(input clk, input rst_n, input start, input[31:0] sprite_data_d
    reg  sprite_counter_next, sprite_data_active, sprite_data_moving; 
    reg[1:0] sprite_data_direction;
    reg[2:0] state, next_state;
-   reg[7:0] sprite_data_image, sprite_data_speed, sprite_data_distance;
-   reg[8:0] sprite_data_coord_y;
-   reg[9:0] sprite_data_coord_x; 
-   
-   
-   
+   reg[7:0] sprite_data_image, sprite_data_speed, sprite_data_distance, sprite_data_y, sprite_data_x; 
    
    sprite_counter(clk, rst_n, sprite_counter_next, sprite_counter_done, sprite_num);
    
