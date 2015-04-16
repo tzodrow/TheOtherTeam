@@ -1,7 +1,7 @@
-module draw_sprite(clk, rst_n, write_en, frame_addr, frame_data, rom_addr, read_en, done, coordinates, img_sel, move, start, rom_data);
+module draw_sprite(clk, rst_n, write_en, frame_addr, frame_data, frame_write_valid, rom_addr, read_en, rom_data_valid, done, coordinates, img_sel, start, rom_data);
 	
 	input clk;
-	input rst_n
+	input rst_n;
 
 	// Move Logic inputs/outputs
 	input [18:0] coordinates;
@@ -38,6 +38,7 @@ module draw_sprite(clk, rst_n, write_en, frame_addr, frame_data, rom_addr, read_
 	assign frame_data = rom_data_flop[23:0];
 	assign rom_addr = {img_flop, counter};
 
+
 	// flop values to protect against move logic doing stupid shit
 	always @(posedge clk, negedge rst_n) begin
 		if(!rst_n) begin
@@ -69,8 +70,10 @@ module draw_sprite(clk, rst_n, write_en, frame_addr, frame_data, rom_addr, read_
 	always @(posedge clk, negedge rst_n) begin
 		if(!rst_n)
 			counter <= 6'b0;
-		else if(start || rst_counter) 
+		else if(start || rst_counter) begin
+			$display("Counter getting reset");
 			counter <= 6'b0;
+		end
 		else if(increment)
 			if(counter == 6'b111111) counter <= 0;
 			else counter <= counter + 1;

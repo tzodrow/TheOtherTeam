@@ -19,7 +19,7 @@ module draw_sprite_tb();
 
 	reg [6:0] counter;
 
-	draw_sprite iDUT(clk, rst_n, write_en, frame_addr, frame_data, rom_addr, read_en, done, coordinates, img_sel, move, start, rom_data);
+	draw_sprite iDUT(clk, rst_n, write_en, frame_addr, frame_data, frame_write_valid, rom_addr, read_en, rom_data_valid, done, coordinates, img_sel, start, rom_data);
 
 	initial begin
 		clk = 0;
@@ -45,9 +45,35 @@ module draw_sprite_tb();
 		clk = ~clk;
 	end
 
+	always @(write_en) begin
+		if(write_en == 1) frame_write_valid = 1;
+	end
+
+	always @(frame_write_valid) begin
+		if(frame_write_valid == 1) begin
+			#20;
+			frame_write_valid = 0;
+		end
+		
+	end
+
+	always@(read_en) begin
+		if(read_en == 1) rom_data_valid = 1;
+	end
+
+	always @(done) begin
+		if(done == 1) begin
+			#20;
+			start = 1;
+			#10;
+			start = 0;
+		end
+	end
+
 	always @(rom_addr) begin
 		if(counter == 63) counter = 0;
 		else counter = counter + 1;
+		$display("counter = %d", counter);
 	end
 
 endmodule
