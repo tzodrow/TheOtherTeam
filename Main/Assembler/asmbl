@@ -106,8 +106,8 @@ def movi(args, line_num):
         return error_msg
     if isinstance(int(args[0]), int) and check_valid(registers, args[1], 2, line_num) \
             and isinstance(int(args[2]), int):
-        return '00111' + registers[args[1]] + pad(bin(int(args[0]))[2:], 2) + pad(bin(int(args[2]))[2:], 8) \
-               + pad("0", 12)
+        return '00111' + registers[args[1]] + pad(bin(int(args[0]))[2:], 2) + pad("0", 12) \
+               + pad(bin(int(args[2]))[2:], 8)
     else:
         return error_msg
 

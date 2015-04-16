@@ -3,9 +3,9 @@ module draw_map(
 		input rst_n,
 		input start,
 		output reg done,
-		input ready,
 		input [31:0] pixel,
 		input mem_rdy,
+		input [18:0] base_addr,
 		output reg mem_re,
 		output reg [18:0] addr, // Same for both Map Memory and Frame buffer (Maybe)
 		input frame_rdy,
@@ -18,15 +18,12 @@ module draw_map(
 	localparam WRITE_FRAME_BUFFER = 2'b10;
 	localparam INC_ADDR = 2'b11;
 	
-	localparam HEX_480 = 9'h1E0 - 1;
-	localparam HEX_640 = 10'h280 - 1;
+	localparam HEX_3072000 = 18'h4B000 - 1; // 307,200 = 480 x 640
 	
 	reg [1:0] state, nxt_state;
-	reg rst_addr, inc_addr, ld_frame_data;
-	reg inc_h_count, rst_h_count;
-	reg inc_v_count, rst_v_count;
-	reg [9:0] h_count;
-	reg [8:0] v_count;
+	reg ld_addr, inc_addr, ld_frame_data;
+	reg inc_counter, rst_counter;
+	reg [17:0] counter;
 	
 	always @ (posedge clk, negedge rst_n)
 		if(!rst_n)
@@ -37,8 +34,8 @@ module draw_map(
 	always @ (posedge clk, negedge rst_n)
 		if(!rst_n)
 			addr <= 0;
-		else if(rst_addr)
-			addr <= 0;
+		else if(ld_addr)
+			addr <= base_addr;
 		else if(inc_addr)
 			addr <= addr + 1;
 		
@@ -50,19 +47,11 @@ module draw_map(
 		
 	always @ (posedge clk, negedge rst_n)
 		if(!rst_n)
-			h_count <= 0;
-		else if(rst_h_count)
-			h_count <= 0;
-		else if(inc_h_count)
-			h_count <= h_count + 1;
-	
-	always @ (posedge clk, negedge rst_n)
-		if(!rst_n)
-			v_count <= 0;
-		else if(rst_v_count)
-			v_count <= 0;
-		else if(inc_v_count)
-			v_count <= v_count + 1;
+			counter <= 0;
+		else if(rst_counter)
+			counter <= 0;
+		else if(inc_counter)
+			counter <= counter + 1;
 		
 	always @ (*) begin
 		rst_addr = 0;
@@ -72,13 +61,14 @@ module draw_map(
 		mem_re = 0;
 		frame_we = 0;
 		nxt_state = IDLE;
+		inc_counter = 0;
+		rst_counter = 0;
 		
 		case(state)
 			IDLE : begin
 				if(start) begin
-					rst_addr = 1;
-					rst_h_count = 1;
-					rst_v_count = 1;
+					ld_addr = 1;
+					rst_counter = 1;
 					nxt_state = READ_MEM_PIXEL;
 				end
 			end
@@ -100,15 +90,12 @@ module draw_map(
 					nxt_state = READ_MEM_PIXEL;
 					frame_we = 1;
 					inc_addr = 1;
-					if(h_count == HEX_640) begin
-						if(v_count == HEX_480) begin
-							nxt_state = IDLE;
-						end
-						inc_v_count = 1;
-						rst_h_count = 1;
+					inc_counter = 1;
+					if(counter == HEX_307200) begin
+						nxt_state = IDLE;
 					end
 					else begin
-						inc_h_count = 1;
+						nxt_state = READ_MEM_PIXEL;
 					end
 				end
 			end
