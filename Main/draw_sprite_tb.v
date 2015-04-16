@@ -37,7 +37,8 @@ module draw_sprite_tb();
 		start=1;
 		#10;
 		start = 0;
-		
+		#1500;
+		$finish;
 	end
 
 	always begin
@@ -46,7 +47,11 @@ module draw_sprite_tb();
 	end
 
 	always @(write_en) begin
-		if(write_en == 1) frame_write_valid = 1;
+		if(write_en == 1) begin
+			frame_write_valid = 1;
+			$display("Frame addr = %h", frame_addr);
+		end
+
 	end
 
 	always @(frame_write_valid) begin
