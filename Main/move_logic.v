@@ -1,14 +1,13 @@
-module move_logic(input clk, input rst_n, input start, input[63:0] sprite_data_read_data, input draw_sprite_rdy,   
-   output reg draw_sprite_start, 
-   output reg sprite_data_re, output reg sprite_data_we, output reg[7:0] sprite_data_address, output reg[63:0] sprite_data_write_data);
+module move_logic(input clk, input rst_n, input start, output done, input[63:0] sprite_data_read_data, input draw_sprite_rdy,   
+   output draw_sprite_start, output [7:0] draw_sprite_image, output [16:0] draw_sprite_coordinates,
+   output sprite_data_re, output sprite_data_we, output[7:0] sprite_data_address, output[63:0] sprite_data_write_data);
 
    localparam IDLE = 3'b000;
    localparam GET_SPRITE_NUM = 3'b001;
-   localparam GET_SPRITE_FLAGS = 3'b010;
-   localparam GET_COORD_DATA = 3'b011;
-   localparam UPDATE_COORD = 3'b100;
-   localparam STORE_COORD = 3'b101;
-   localparam SEND_DRAW_SPRITE = 3'b110;
+   localparam GET_SPRITE_DATA = 3'b010;
+   localparam UPDATE_COORD = 3'b011;
+   localparam STORE_COORD = 3'b100;
+   localparam SEND_DRAW_SPRITE = 3'b101;
    
    localparam DIR_UP = 2'b00;
    localparam DIR_DOWN = 2'b01;
@@ -17,30 +16,68 @@ module move_logic(input clk, input rst_n, input start, input[63:0] sprite_data_r
    
    wire sprite_counter_done;
    wire sprite_num;
-   reg  sprite_counter_next, sprite_data_active, sprite_data_moving; 
-   reg[1:0] sprite_data_direction;
+   wire  sprite_counter_next, sprite_data_active, sprite_data_moving, updated_sprite_moving; 
+   wire[1:0] sprite_data_direction;
    reg[2:0] state, next_state;
-   reg[7:0] sprite_data_image, sprite_data_speed, sprite_data_distance, sprite_data_y, sprite_data_x; 
+   wire[7:0] sprite_data_image, sprite_data_speed, sprite_data_distance, sprite_data_y, sprite_data_x; 
+   wire[7:0] updated_sprite_x, updated_sprite_y, updated_sprite_distance, true_distance; 
+   reg[63:0] sprite_data_saved;
+   wire[63:0] next_sprite_data_saved;
+   
+   assign done = (state == IDLE) ? 1'b1 : 1'b0; 
    
    sprite_counter(clk, rst_n, sprite_counter_next, sprite_counter_done, sprite_num);
+   assign sprite_counter_next = (state == GET_SPRITE_NUM) ? 1'b1 : 1'b0;
    
+   assign sprite_data_re = (state == GET_SPRITE_DATA) ? 1'b1 : 1'b0;
+   assign sprite_data_we = (state == STORE_COORD) ? 1'b1 : 1'b0;
+   assign sprite_data_address = sprite_num; 
+   assign sprite_data_write_data = {sprite_data_saved[63], updated_sprite_moving, sprite_data_saved[61:56], 
+   									updated_sprite_x[7:0], updated_sprite_y[7:0], updated_sprite_distance[7:0], sprite_data_saved[31:0]}; 
+   assign next_sprite_data_saved = (state == GET_SPRITE_DATA) ? sprite_data_read_data : sprite_data_saved; 
+   
+   assign sprite_data_active = sprite_data_saved[63];
+   assign sprite_data_moving = sprite_data_saved[62];
+   assign sprite_data_direction = sprite_data_saved[61:60];
+   assign sprite_data_x = sprite_data_saved[55:48];
+   assign sprite_data_y = sprite_data_saved[47:40];
+   assign sprite_data_distance = sprite_data_saved[39:32];
+   assign sprite_data_speed = sprite_data_saved[31:24];
+   assign sprite_data_image = sprite_data_saved[23:16];
+    
+   assign true_distance = (sprite_data_speed > sprite_data_distance) ? sprite_data_distance : sprite_data_speed; 
+   assign updated_sprite_distance = sprite_data_distance - true_distance; 
+   assign updated_sprite_moving = (updated_sprite_distance == 8'd0) ? 1'b0 : 1'b1; 
+   
+   assign updated_sprite_x = (sprite_data_moving == 1'b1) ?  
+   							  (sprite_data_direction == DIR_LEFT) ? sprite_data_x - true_distance : 
+   							  (sprite_data_direction == DIR_RIGHT) ? sprite_data_x + true_distance : sprite_data_x : sprite_data_x; 
+   assign updated_sprite_y = (sprite_data_moving == 1'b1) ? 
+   							  (sprite_data_direction == DIR_UP) ? sprite_data_y - true_distance : 
+   							  (sprite_data_direction == DIR_DOWN) ? sprite_data_y + true_distance : sprite_data_y : sprite_data_y;
+
+   
+   assign draw_sprite_start = ((state == SEND_DRAW_SPRITE) && (draw_sprite_rdy == 1'b1)) ? 1'b1 : 1'b0;
+   assign draw_sprite_image = sprite_data_image;
+   assign draw_sprite_coordinates = {updated_sprite_x[7:0], 1'b0, updated_sprite_y[7:0]}; 
+
+
+   //register updates --- sequential 
    always@(posedge clk, negedge rst_n) begin
       if(!rst_n) begin
-         state <= IDLE;       
+         state <= IDLE;
+         sprite_data_saved <= 64'd0;      
       end
       else begin
          state <= next_state;
+         sprite_data_saved <= next_sprite_data_saved; 
       end
    end
    
+   
+   //next_state logic --- combinational
    always@(*) begin
-      next_state = IDLE; 
-      sprite_counter_next = 1'b0;
-      draw_sprite_start = 1'b0;
-      sprite_data_re = 1'b0;
-      sprite_data_we = 1'b0;
-      sprite_data_address = 24'd0;
-      sprite_data_coord_write = 19'd0;
+      next_state = IDLE;
       case(state)
          IDLE: begin
                  if(start) begin
@@ -51,44 +88,16 @@ module move_logic(input clk, input rst_n, input start, input[63:0] sprite_data_r
                     end
               end 
          GET_SPRITE_NUM: begin
-                 sprite_counter_next = 1'b1; 
-                 next_state = GET_SPRITE_FLAGS;
+                 next_state = GET_SPRITE_DATA;
               end 
-         GET_SPRITE_FLAGS: begin
-                 if(sprite_data_active) begin
-                    sprite_data_re = 1'b1;
-                    sprite_data_address = 24'd0; //sprite_num * data_per_sprite (flags will be at first mem location for each sprite) 
-                    next_state = GET_COORD_DATA;
-                    end
-                 else if(sprite_counter_done) begin
-                    sprite_data_re = 1'b0;
-                    sprite_data_address = 24'd0;
-                    next_state = IDLE;
-                    end
-                 else begin
-                    sprite_data_re = 1'b0;
-                    sprite_data_address = 24'd0;
-                    next_state = GET_SPRITE_NUM;
-                    end
-              end 
-         GET_COORD_DATA: begin
-                 if(sprite_data_moving) begin
-                    sprite_data_re = 1'b1;
-                    sprite_data_address = 24'd0; //sprite_num * data_per_sprite + location_of_coordinates_in_each_sprites_memory
-                    next_state = UPDATE_COORD;
-                    end
-                 else begin
-                    sprite_data_re = 1'b0;
-                    sprite_data_address = 24'd0;
-                    next_state = SEND_DRAW_SPRITE;
-                    end
+         GET_SPRITE_DATA: begin
+         		 next_state = UPDATE_COORD; 
               end 
          UPDATE_COORD: begin
-                 if (sprite_data_direction == DIR_UP) 
-                 else if (sprite_data_direction == DIR_DOWN)
-                 else if (sprite_data_direction == DIR_LEFT)
-                 else begin end //DIR_RIGHT
-                 next_state = STORE_COORD;
+                 if(sprite_data_active & sprite_data_moving) next_state = STORE_COORD;
+                 else if(sprite_data_active) next_state = SEND_DRAW_SPRITE;
+                 else if(sprite_counter_done) next_state = IDLE;
+                 else next_state = GET_SPRITE_NUM;
               end 
          STORE_COORD: begin
                  next_state = SEND_DRAW_SPRITE;
@@ -96,7 +105,6 @@ module move_logic(input clk, input rst_n, input start, input[63:0] sprite_data_r
          SEND_DRAW_SPRITE: begin
                  if(!draw_sprite_rdy) next_state = SEND_DRAW_SPRITE; 
                  else begin
-                     
                     if(sprite_counter_done) next_state = IDLE;
                     else next_state = GET_SPRITE_NUM;
                 end
@@ -108,8 +116,5 @@ module move_logic(input clk, input rst_n, input start, input[63:0] sprite_data_r
       endcase
        
    end
-
-
-
 
 endmodule
