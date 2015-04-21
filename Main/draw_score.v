@@ -5,7 +5,8 @@ module draw_score(clk, rst_n, start, score_data, score_valid_data, frame_rdy, //
 	input  [31:0] score_data;
 	output reg done, score_re, frame_we;
 	output [4:0] score_addr;
-	output [18:0] frame_addr;
+	//17 bit value with new frame buffer
+	output [16:0] frame_addr;
 	output [31:0] frame_data;
 
 	//States for state machine
@@ -19,7 +20,7 @@ module draw_score(clk, rst_n, start, score_data, score_valid_data, frame_rdy, //
 	wire [7:0] health;
 	wire [19:0] score;
 	
-	reg clr_cnt, inc_cnt, inc_player_cnt;
+	reg clr_cnt, clr_player_cnt, inc_cnt, inc_player_cnt;
 	reg [1:0] state, nxt_state;
 	reg [13:0] pixel_cnt;
 	reg [2:0] player_cnt;
@@ -47,6 +48,7 @@ module draw_score(clk, rst_n, start, score_data, score_valid_data, frame_rdy, //
 		score_re = 0;
 		clr_cnt = 0;
 		inc_cnt = 0;
+		clr_player_cnt = 0;
 		inc_player_cnt = 0;
 		frame_we = 0;
 		done = 0;
@@ -57,6 +59,7 @@ module draw_score(clk, rst_n, start, score_data, score_valid_data, frame_rdy, //
 				if(start)begin
 					score_re = 1'b1;
 					clr_cnt = 1'b1;
+					clr_player_cnt = 1'b1;
 					nxt_state = READ;
 				end
 				else
@@ -83,7 +86,7 @@ module draw_score(clk, rst_n, start, score_data, score_valid_data, frame_rdy, //
 				end
 			end
 			default: begin //INCADDR
-				if(!all_pixels_done)begin
+				if(!all_pixels_done && !all_players_done)begin
 					frame_we = 1'b1;
 					nxt_state = WRITE;
 				end
@@ -94,6 +97,7 @@ module draw_score(clk, rst_n, start, score_data, score_valid_data, frame_rdy, //
 				else begin //all_pixels_done, !all_players_done
 					inc_player_cnt = 1'b1;
 					score_re = 1'b1;
+					clr_cnt = 1;
 					nxt_state = READ;
 				end
 			end
@@ -102,8 +106,8 @@ module draw_score(clk, rst_n, start, score_data, score_valid_data, frame_rdy, //
 	
 	assign score_addr = player_cnt;
 	assign frame_addr = pixel_cnt;
-	assign all_pixels_done = (4800) ? 1'b1 : 1'b0;  //Only prints out a 320 x 15 square at the top of the screen
-	assign all_players_done = (&player_cnt) ? 1'b1 : 1'b0; 		
+	assign all_pixels_done = (pixel_cnt == 14'h12C0) ? 1'b1 : 1'b0;  //Only prints out a 320 x 15 square at the top of the screen
+	assign all_players_done = (player_cnt == 3'h4) ? 1'b1 : 1'b0; 		
 	
 	//Pixel Address Counter
 	always @(posedge clk, negedge rst_n) begin
@@ -126,7 +130,7 @@ module draw_score(clk, rst_n, start, score_data, score_valid_data, frame_rdy, //
 	
 	//Player Register Counter
 	always @(posedge clk, negedge rst_n) begin
-		if(!rst_n || clr_cnt)
+		if(!rst_n || clr_player_cnt)
 			player_cnt = 0;
 		else if(inc_player_cnt)
 			player_cnt <= player_cnt + 1;
