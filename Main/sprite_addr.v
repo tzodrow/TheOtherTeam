@@ -1,7 +1,7 @@
 module sprite_addr(address, coordinates, counter);
-	input [18:0] coordinates;
+	input [16:0] coordinates;
 	input [5:0] counter;
-	output reg [18:0] address;
+	output reg [16:0] address;
 
 	always@(*) begin
 		address = 0;

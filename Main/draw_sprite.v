@@ -4,8 +4,8 @@ module draw_sprite(clk, rst_n, write_en, frame_addr, frame_data, frame_write_val
 	input rst_n;
 
 	// Move Logic inputs/outputs
-	input [18:0] coordinates;
-	reg [18:0] cord_flop;
+	input [16:0] coordinates;
+	reg [16:0] cord_flop;
 	input [7:0] img_sel;
 	reg [7:0] img_flop;
 	input start;
@@ -13,7 +13,7 @@ module draw_sprite(clk, rst_n, write_en, frame_addr, frame_data, frame_write_val
 
 	// Frame buffer outputs
 	input frame_write_valid;
-	output [18:0] frame_addr;
+	output [16:0] frame_addr;
 	output [23:0] frame_data;
 	output reg write_en;
 
@@ -42,7 +42,7 @@ module draw_sprite(clk, rst_n, write_en, frame_addr, frame_data, frame_write_val
 	// flop values to protect against move logic doing stupid shit
 	always @(posedge clk, negedge rst_n) begin
 		if(!rst_n) begin
-			cord_flop <= 19'b0;
+			cord_flop <= 17'b0;
 			img_flop <= 8'b0;
 			rom_data_flop <= 32'b0;
 		end
