@@ -15,7 +15,7 @@ module move_logic(input clk, input rst_n, input start, output done, input[63:0] 
    localparam DIR_RIGHT = 2'b11; 
    
    wire sprite_counter_done;
-   wire sprite_num;
+   wire[7:0] sprite_num;
    wire  sprite_counter_next, sprite_data_active, sprite_data_moving, updated_sprite_moving; 
    wire[1:0] sprite_data_direction;
    reg[2:0] state, next_state;
@@ -24,10 +24,11 @@ module move_logic(input clk, input rst_n, input start, output done, input[63:0] 
    reg[63:0] sprite_data_saved;
    wire[63:0] next_sprite_data_saved;
    
-   assign done = (state == IDLE) ? 1'b1 : 1'b0; 
+   assign done = (state == IDLE) ? 1'b1 : 1'b0;  //indicate to controller when we are done/ready to start
    
-   sprite_counter(clk, rst_n, sprite_counter_next, sprite_counter_done, sprite_num);
-   assign sprite_counter_next = (state == GET_SPRITE_NUM) ? 1'b1 : 1'b0;
+   sprite_counter sprite_counter(clk, rst_n, sprite_counter_next, sprite_counter_done, sprite_num);
+   assign sprite_counter_next = (state == UPDATE_COORD) ? 1'b1 : 1'b0; //changed to increment sprite_counter after saving off the previous data,
+									// the memory should then be able to read that data right away
    
    assign sprite_data_re = (state == GET_SPRITE_DATA) ? 1'b1 : 1'b0;
    assign sprite_data_we = (state == STORE_COORD) ? 1'b1 : 1'b0;
@@ -50,7 +51,7 @@ module move_logic(input clk, input rst_n, input start, output done, input[63:0] 
    assign updated_sprite_moving = (updated_sprite_distance == 8'd0) ? 1'b0 : 1'b1; 
    
    assign updated_sprite_x = (sprite_data_moving == 1'b1) ?  
-   							  (sprite_data_direction == DIR_LEFT) ? sprite_data_x - true_distance : 
+   							  (sprite_data_direction == DIR_LEFT) ? sprite_data_x - true_distance :  //might need to change because of x-coord only being 8 bits, not 9
    							  (sprite_data_direction == DIR_RIGHT) ? sprite_data_x + true_distance : sprite_data_x : sprite_data_x; 
    assign updated_sprite_y = (sprite_data_moving == 1'b1) ? 
    							  (sprite_data_direction == DIR_UP) ? sprite_data_y - true_distance : 
@@ -59,7 +60,7 @@ module move_logic(input clk, input rst_n, input start, output done, input[63:0] 
    
    assign draw_sprite_start = ((state == SEND_DRAW_SPRITE) && (draw_sprite_rdy == 1'b1)) ? 1'b1 : 1'b0;
    assign draw_sprite_image = sprite_data_image;
-   assign draw_sprite_coordinates = {updated_sprite_x[7:0], 1'b0, updated_sprite_y[7:0]}; 
+   assign draw_sprite_coordinates = {updated_sprite_x[7:0], 1'b0, updated_sprite_y[7:0]}; //need to double the xcoordinate before sending to draw sprite
 
 
    //register updates --- sequential 
@@ -91,7 +92,7 @@ module move_logic(input clk, input rst_n, input start, output done, input[63:0] 
                  next_state = GET_SPRITE_DATA;
               end 
          GET_SPRITE_DATA: begin
-         		 next_state = UPDATE_COORD; 
+         	 next_state = UPDATE_COORD; 
               end 
          UPDATE_COORD: begin
                  if(sprite_data_active & sprite_data_moving) next_state = STORE_COORD;
