@@ -1,11 +1,11 @@
-module MEM(clk, rst_n, mem_data, addr, re, we, sprite_data, sprite_ALU_select, mem_ALU_select, flag_ov, flag_neg, flag_zero, branch_condition, //Inputs
-		   cache_hit, mem_ALU_WB_select, sprite_ALU_result, mem_result, branch_taken); //Outputs
+module MEM(clk, rst_n, mem_data, addr, re, we, ALU_result, sprite_data, sprite_ALU_select, mem_ALU_select, flag_ov, flag_neg, flag_zero, branch_condition, //Inputs
+		   cache_hit, /*mem_ALU_WB_select,*/ sprite_ALU_result, mem_result, branch_taken); //Outputs
 		   
-	input clk ,rst_n, cmd, sprite_ALU_select, mem_ALU_select, flag_ov, flag_neg, flag_zero;
+	input clk ,rst_n, sprite_ALU_select, mem_ALU_select, flag_ov, flag_neg, flag_zero, re, we;
 	input [2:0] branch_condition;
-	input [31:0] mem_data, sprite_data;
+	input [31:0] mem_data, sprite_data, ALU_result;
 	input [21:0] addr;
-	output cache_hit, mem_ALU_WB_select, branch_taken;
+	output cache_hit, /*mem_ALU_WB_select,*/ branch_taken;
 	output [31:0] sprite_ALU_result, mem_result;
 	
 	//branch opcodes
@@ -20,14 +20,23 @@ module MEM(clk, rst_n, mem_data, addr, re, we, sprite_data, sprite_ALU_select, m
 
 	
 	//Simple memory 
-	mainMem mainMemory(.clk(clk),.addr(addr),.re(re),.we(we),.wrt_data(mem_data),.rd_data(mem_result));
+	//mainMem mainMemory(.clk(clk),.addr(addr),.re(re),.we(we),.wrt_data(mem_data),.rd_data(mem_result));
 	
 	
 	//This will be for the memory with cache	
 	/*mainMemory mainMem(.clk(clk),.rst_n(rst_n),.data(mem_data),.addr(addr),.cmd(cmd), //Inputs
 					 .result(mem_result),.cache_hit(cache_hit)); //Outputs*/
 	
-	assign sprite_ALU_result = (sprite_ALU_select) ? mem_data : sprite_data;
+	main_memory your_instance_name (
+  .clka(clk), // input clka
+  .ena((re | we)), // input ena
+  .wea(we), // input [0 : 0] wea
+  .addra(addr[4:0]), // input [4 : 0] addra
+  .dina(mem_data), // input [31 : 0] dina
+  .douta(mem_result) // output [31 : 0] douta
+	);
+	
+	assign sprite_ALU_result = (sprite_ALU_select) ?  sprite_data : ALU_result;
 	
 	assign mem_ALU_WB_select = mem_ALU_select;
 	
