@@ -91,9 +91,9 @@ module EX(
 	assign sprite_write_data = sprite_use_imm ? sprite_imm[13:0] : src0[13:0];
 	
 	
-	//assign sprite_address = //sprite address calculation based on sprite_addr and sprite_fcn(attribute) 
+	//assign sprite_address = sprite_addr + sprite_action; //sprite address calculation based on sprite_addr and sprite_fcn(attribute) 
 	   
 	   //instantiate sprite_mem as a separate module and declare the x-core generated mem inside it
-	//sprite_mem(sprite_action, sprite_addr, sprite_write_data, sprite_re, sprite_we, sprite_data);
+	//sprite_mem(sprite_action, sprite_address, sprite_write_data, sprite_we, sprite_read_data, sprite_write_data);
 		
 endmodule	
