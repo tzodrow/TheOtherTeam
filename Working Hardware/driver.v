@@ -23,7 +23,8 @@ module driver(
     input tbr,
     output reg [1:0] ioaddr,
     inout [7:0] databus,
-	 input [23:0] data2output
+	 input [23:0] data2output,
+	 input [23:0] data2output_2
     );
 
     //////////////////////////////
@@ -34,6 +35,7 @@ module driver(
 	 localparam RECEIVE_WAIT = 3'b010;
     localparam SEND = 3'b011;
     localparam SPACE = 3'b100;
+	 localparam ADDRESS = 3'b101;
 
     ////////////////////////////////////////
     // Registers used for control signals //
@@ -50,8 +52,8 @@ module driver(
 	 wire [23:0] hex;
 	 wire [7:0] ascii;
 	 
-	 reg ld_send_data;
-	 reg rst_shift, dec_shift;
+	 reg ld_send_data, ld_send_data_2;
+	 reg rst_shift, dec_shift, rst_shift_2;
 
     // Tri-state buffer used to receive and send data via the databuse
     // Sel high = output, Sel low = input
@@ -81,12 +83,16 @@ module driver(
 			send_data <= 0;
 		else if(ld_send_data)
 			send_data <= data2output;
+		else if(ld_send_data_2)
+			send_data <= data2output_2;
 	end
 	
 	always @ (posedge clk, posedge rst) begin
 		if(rst)
 			shift_counter <= 0; 
 		else if(rst_shift)
+			shift_counter <= 12'h005; // Value == 5
+		else if(rst_shift_2)
 			shift_counter <= 12'h005; // Value == 5
 		else if(dec_shift)
 			shift_counter <= shift_counter - 1;
@@ -107,8 +113,10 @@ module driver(
 		data_out = 8'h00;
 		wrt_rx_data = 0;
 		rst_shift = 0;
+		rst_shift_2 = 0;
 		dec_shift = 0;
 		ld_send_data = 0;
+		ld_send_data_2 = 0;
 		
 		case(state)
             // Write the lower byte to Baud Gen
@@ -150,9 +158,17 @@ module driver(
 						iocs = 0;
 					end
 					else begin
-						nxt_state = SEND;
-						ld_send_data = 1;
-						rst_shift = 1;
+						if(databus==8'h31) begin
+							nxt_state = SEND;
+							ld_send_data = 1;
+							rst_shift = 1;
+						end
+						else if(databus==8'h32) begin
+							nxt_state = SEND;
+							ld_send_data_2 = 1;
+							rst_shift_2 = 1;
+						end
+						else nxt_state = RECEIVE_WAIT;
 						ioaddr = 2'b00;
 					end
 			end

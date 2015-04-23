@@ -46,7 +46,7 @@ module top_level(
 	wire [7:0] databus;
 	
 	wire clk_100mhz_buf;
-	wire [23:0] data2output;
+	wire [23:0] data2output, data2output_2;
 	
 	// Instantiate your SPART here
 	spart spart0( .clk(clk_100mhz_buf),
@@ -71,7 +71,8 @@ module top_level(
 						 .tbr(tbr),
 						 .ioaddr(ioaddr),
 						 .databus(databus),
-						 .data2output(data2output)
+						 .data2output(data2output),
+						 .data2output_2(data2output_2)
 					 );
 					 
 	vga vga0(	.clk_100mhz(clk_100mhz),  
@@ -89,7 +90,8 @@ module top_level(
 					.scl_tri(scl_tri), 
 					.sda_tri(sda_tri),
 					.clk_100mhz_buf(clk_100mhz_buf),
-					.data2output(data2output)
+					.data2output(data2output),
+					.data2output_2(data2output_2)
 				);
 					 
 endmodule

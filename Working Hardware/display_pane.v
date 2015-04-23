@@ -18,21 +18,21 @@
 // Additional Comments: 
 //
 //////////////////////////////////////////////////////////////////////////////////
-module display_pane(clk, rst, fifo_full, fifo_wr_en, fifo_in);
+module display_pane(clk, rst, fifo_full, fifo_wr_en, addr, data2output_2);
     input clk;
     input rst;
 	 input fifo_full;
 	 
 	 output fifo_wr_en;
-	 output [23:0] fifo_in;
-	 wire[16:0] addr; 
+	 output [23:0] fifo_in, data2output_2;
+	 output [16:0] addr; 
 	 
 	 reg[9:0] col;
 	 reg[8:0] row;
 	 
 	 wire[9:0] next_col;
 	 wire[8:0] next_row; 
-	 
+	 assign data2output_2 = {addr[7:0], 15'h0, fifo_full};
 	 assign fifo_wr_en = ~(fifo_full); //always write unless fifo is full
 	 
 	 assign next_col = ((col == 10'd639) ? 0 : col + 1); //when at end of column, reset to 0
@@ -54,12 +54,5 @@ module display_pane(clk, rst, fifo_full, fifo_wr_en, fifo_in);
 		end
 	 end
 	 
-	 assign addr = ((row >> 1) * 320) + (col >> 1); //scaling by +8 factor, reads into ROM linearly 
-	 
-		ROM rom(
-		  .clka(~clk), // 100 MHz clock
-		  .addra(addr),	  // input [12 : 0] addra
-		  .douta(fifo_in) // output [23 : 0] douta
-		);
-	 
+	 assign addr = ((row >> 1) * 320) + (col >> 1); //scaling by +8 factor, reads into ROM linearly  
 endmodule

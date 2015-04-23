@@ -18,8 +18,9 @@
 // Additional Comments: 
 //
 //////////////////////////////////////////////////////////////////////////////////
-module vga(clk_100mhz,  rst, pixel_r, pixel_g, pixel_b, hsync, vsync, blank, clk, clk_n, D, dvi_rst, scl_tri, sda_tri, clk_100mhz_buf, data2output);
-	 output [23:0] data2output;
+module vga(clk_100mhz,  rst, pixel_r, pixel_g, pixel_b, hsync, vsync, blank, clk, clk_n, 
+				D, dvi_rst, scl_tri, sda_tri, clk_100mhz_buf, data2output, data2output_2);
+	 output [23:0] data2output, data2output_2;
 
     input clk_100mhz;
     input rst;
@@ -87,23 +88,35 @@ module vga(clk_100mhz,  rst, pixel_r, pixel_g, pixel_b, hsync, vsync, blank, clk
 	 vga_clk vga_clk_gen1(clk_100mhz, rst, clk_25mhz, clkin_ibufg_out, clk_100mhz_buf, locked_dcm);
 	 
 	  //instantiates ROM and connects to FIFO, runs at 100 MHz
-    display_pane display_pane(clk_100mhz_buf, rst|~locked_dcm, fifo_full, fifo_wr_en, fifo_in);
+    display_pane display_pane(	.clk(clk_100mhz_buf), 
+											.rst(rst|~locked_dcm), 
+											.fifo_full(fifo_full), 
+											.fifo_wr_en(fifo_wr_en), 
+											.addr(frame_read_addr),
+											.data2output_2(data2output_2)
+										);
 	
 	 //pulls from FIFO and outputs on proper pixel-lines (RGB), runs at 25 MHz
 	 vga_logic vga_logic(clk_25mhz, rst|~locked_dcm, blank, comp_sync, hsync, vsync, pixel_x, pixel_y, fifo_out, fifo_rd_en, fifo_empty, pixel_r, pixel_g, pixel_b);
 	 
 	 //writes at 100 MHz, reads at 25 MHz
-	 FIFO fifo(
-	  .rst(rst|~locked_dcm), // input rst
-	  .wr_clk(clk_100mhz_buf), // input wr_clk
-	  .rd_clk(clk_25mhz), // input rd_clk
-	  .din(fifo_in), // input [23 : 0] din
-	  .wr_en(fifo_wr_en), // input wr_en
-	  .rd_en(fifo_rd_en), // input rd_en
-	  .dout(fifo_out), // output [23 : 0] dout
-	  .full(fifo_full), // output full
-	  .empty(fifo_empty) // output empty
-	);
+	 FIFO fifo(		.rst(rst|~locked_dcm), // input rst
+						.wr_clk(clk_100mhz_buf), // input wr_clk
+						.rd_clk(clk_25mhz), // input rd_clk
+						.din(fifo_in), // input [23 : 0] din
+						.wr_en(fifo_wr_en), // input wr_en
+						.rd_en(fifo_rd_en), // input rd_en
+						.dout(fifo_out), // output [23 : 0] dout
+						.full(fifo_full), // output full
+						.empty(fifo_empty) // output empty
+					);
+	
+	wire frame_we, start, done;
+	wire [16:0] frame_buf_addr;
+	wire [23:0] frame_buf_data;
+	
+	draw_map draw_map0(.clk(clk_100mhz_buf), .rst(rst|~locked_dcm), .start(start), .done(done),
+               .frame_buf_we(frame_we), .frame_buf_addr(frame_buf_addr), frame_buf_data);  
 	
 	assign data2output = fifo_out;
 	 
