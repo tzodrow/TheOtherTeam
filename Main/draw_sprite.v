@@ -51,7 +51,12 @@ module draw_sprite(clk, rst_n, write_en, frame_addr, frame_data, frame_write_val
 				cord_flop <= coordinates;
 				img_flop <= img_sel;
 			end
+			else begin
+				cord_flop <= cord_flop;
+				img_flop <= img_flop;
+			end
 			if(rom_data_valid) rom_data_flop <= rom_data;
+			else rom_data_flop <= rom_data_flop;
 		end
 	end
 
@@ -64,6 +69,7 @@ module draw_sprite(clk, rst_n, write_en, frame_addr, frame_data, frame_write_val
 			state <= next_state;
 			if(set_done) done <= 1;
 			else if(start) done <= 0;
+			else done <= done; 
 		end
 	end
 
@@ -77,16 +83,9 @@ module draw_sprite(clk, rst_n, write_en, frame_addr, frame_data, frame_write_val
 		else if(increment)
 			if(counter == 6'b111111) counter <= 0;
 			else counter <= counter + 1;
-
-	end
-
-	always @(posedge clk, negedge rst_n) begin
-		if(!rst_n)
-			read_en <= 1'b0;
-		else if(counter >= 6'b111111)
-			read_en <= 1'b0;
-		else if(start)
-			read_en <= 1'b1;
+		else begin
+			counter <= counter;
+		end
 	end
 
 	always @(*) begin
@@ -114,7 +113,7 @@ module draw_sprite(clk, rst_n, write_en, frame_addr, frame_data, frame_write_val
 					write_en = 1;
 					if(frame_write_valid) begin
 						increment = 1;
-						if(counter == 63) begin
+						if(counter == 6'd63) begin
 							set_done = 1;
 							rst_counter = 1;
 							next_state = IDLE;
