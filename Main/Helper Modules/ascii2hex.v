@@ -1,5 +1,5 @@
 module ascii2hex(
-		input [8:0] ascii,
+		input [7:0] ascii,
 		output reg [3:0] hex);
 	
 	always @ (ascii) begin
