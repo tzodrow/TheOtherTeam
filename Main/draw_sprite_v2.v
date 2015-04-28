@@ -57,7 +57,7 @@ module draw_sprite(
 			IDLE : begin
 				rdy = 1;
 				if(start) begin
-					nxt_state = READ_IMG;
+					nxt_state = WRITE_FRAME;
 					ld_data = 1;
 					rst_counter = 1;
 				end
