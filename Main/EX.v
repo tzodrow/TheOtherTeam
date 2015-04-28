@@ -16,8 +16,10 @@ module EX(
 	input sprite_re,
 	input sprite_we,
 	input sprite_use_dst_reg,
-	input [63:0] full_sprite_data_in;
-	output[63:0] full_sprite_data_out;
+	input [63:0] full_sprite_data_in,
+	input [7:0]  full_sprite_addr,
+	input full_sprite_we,
+	output[63:0] full_sprite_data_out,
 	output[31:0] ALU_result,
 	output[31:0] sprite_data,
 	output reg flag_ov,
