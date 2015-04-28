@@ -1,28 +1,23 @@
-module draw_sprite(clk, rst_n, write_en, frame_addr, frame_data, frame_write_valid, rom_addr, read_en, rom_data_valid, done, coordinates, img_sel, start, rom_data);
-	
-	input clk;
-	input rst_n;
+module draw_sprite(
+		input clk, 
+		input rst_n, 
+		output reg write_en, 
+		output [16:0] frame_addr, 
+		output [23:0] frame_data, 
+		input frame_write_valid, 
+		output [13:0] rom_addr, 
+		output reg read_en, 
+		input rom_data_valid, 
+		output reg done, 
+		input [16:0] coordinates, 
+		input [7:0] img_sel, 
+		input start, 
+		input [23:0] rom_data
+	);
 
 	// Move Logic inputs/outputs
-	input [16:0] coordinates;
 	reg [16:0] cord_flop;
-	input [7:0] img_sel;
 	reg [7:0] img_flop;
-	input start;
-	output reg done;
-
-	// Frame buffer outputs
-	input frame_write_valid;
-	output [16:0] frame_addr;
-	output [23:0] frame_data;
-	output reg write_en;
-
-	// Sprite Image Memory (ROM) input/outputs
-	input [23:0] rom_data;
-	input rom_data_valid;
-	reg [23:0] rom_data_flop;
-	output [13:0] rom_addr;
-	output reg read_en;
 
 	reg [1:0] state, next_state;
 	reg [5:0] counter;
