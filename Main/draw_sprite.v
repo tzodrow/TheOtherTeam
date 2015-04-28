@@ -18,9 +18,9 @@ module draw_sprite(clk, rst_n, write_en, frame_addr, frame_data, frame_write_val
 	output reg write_en;
 
 	// Sprite Image Memory (ROM) input/outputs
-	input [31:0] rom_data;
+	input [23:0] rom_data;
 	input rom_data_valid;
-	reg [31:0] rom_data_flop;
+	reg [23:0] rom_data_flop;
 	output [13:0] rom_addr;
 	output reg read_en;
 
@@ -44,7 +44,7 @@ module draw_sprite(clk, rst_n, write_en, frame_addr, frame_data, frame_write_val
 		if(!rst_n) begin
 			cord_flop <= 17'b0;
 			img_flop <= 8'b0;
-			rom_data_flop <= 32'b0;
+			rom_data_flop <= 24'b0;
 		end
 		else begin
 			if(start) begin
@@ -63,7 +63,7 @@ module draw_sprite(clk, rst_n, write_en, frame_addr, frame_data, frame_write_val
 	always @(posedge clk, negedge rst_n) begin
 		if(!rst_n) begin
 			state <= IDLE;
-			done <= 0;
+			done <= 1;
 		end
 		else begin
 			state <= next_state;

@@ -3,20 +3,16 @@ module spu_controller(
 		input rst_n,
 		input counter_done,
 		input draw_map_done,
-		input draw_sprite_done,
-		input draw_score_done,
+		input move_logic_done,
 		output reg draw_map_start,
-		output reg draw_sprite_start,
-		output reg draw_score_start,
+		output reg move_logic_start,
 		output reg draw_map_en,
-		output reg draw_sprite_en,
-		output reg draw_score_en
+		output reg move_logic_en
 		);
 
 	localparam IDLE = 2'b00;
 	localparam DRAW_MAP = 2'b01;
 	localparam DRAW_SPRITE = 2'b10;
-	localparam DRAW_SCORE = 2'b11;
 	
 	reg [1:0] state, nxt_state;
 	
@@ -28,11 +24,9 @@ module spu_controller(
 		
 	always @ (*) begin
 		draw_map_start = 0;
-		draw_sprite_start = 0;
-		draw_score_start = 0;
+		move_logic_start = 0;
 		draw_map_en = 0;
-		draw_sprite_en = 0;
-		draw_score_en = 0;
+		move_logic_en = 0;
 		nxt_state = IDLE;
 		
 		case(state)
@@ -45,7 +39,7 @@ module spu_controller(
 			DRAW_MAP : begin
 				if(draw_map_done) begin
 					nxt_state = DRAW_SPRITE;
-					draw_sprite_start = 1;
+					move_logic_start = 1;
 				end
 				else begin
 					nxt_state = DRAW_MAP;
@@ -53,19 +47,12 @@ module spu_controller(
 				end
 			end
 			DRAW_SPRITE : begin
-				if(draw_sprite_done) begin
-					nxt_state = DRAW_SCORE;
-					draw_score_start = 1;
+				if(move_logic_done) begin
+					nxt_state = IDLE;
 				end
 				else begin
 					nxt_state = DRAW_SPRITE;
-					draw_sprite_en = 1;
-				end
-			end
-			DRAW_SCORE : begin
-				if(!draw_score_done) begin
-					nxt_state = DRAW_SCORE;
-					draw_score_en = 1;
+					move_logic_en = 1;
 				end
 			end
 		endcase

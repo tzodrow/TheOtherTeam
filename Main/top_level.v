@@ -73,10 +73,10 @@ module top_level(
 						 .ioaddr(ioaddr),
 						 .databus(databus),
 						 .data2output(data2output),
-						 .data2output_2(data2output_2),
+						 .data2output_2(data2output_2)
 					 );
 					 
-	spu spu(	.clk_100mhz(clk_100mhz),  
+	spu spu(.clk_100mhz(clk_100mhz),  
 					.rst(rst), 
 					.pixel_r(pixel_r), 
 					.pixel_g(pixel_g), 
@@ -92,7 +92,7 @@ module top_level(
 					.sda_tri(sda_tri),
 					.clk_100mhz_buf(clk_100mhz_buf),
 					.data2output(data2output),
-					.data2output_2(data2output_2),
+					.data2output_2(data2output_2)
 				);
 					 
 endmodule
