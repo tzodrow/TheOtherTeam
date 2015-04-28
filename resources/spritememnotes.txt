@@ -1,0 +1,4 @@
+DOUTA: 8 bits for action
+DOUTB: 64 bits for full sprite
+WEB is 64 bits,
+WEA 8 bits
