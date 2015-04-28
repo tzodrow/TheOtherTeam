@@ -6,7 +6,7 @@ module draw_sprite(
 		input [7:0] addr_in,
 		output [16:0] frame_addr,
 		output [23:0] frame_data,
-		output reg [13:0] img_mem_addr,
+		output [13:0] img_mem_addr,
 		input [23:0] img_pixel_data,
 		output reg rdy
 	);
@@ -22,6 +22,7 @@ module draw_sprite(
 	
 	assign img_mem_addr = {img_addr, counter};
 	assign frame_addr = coordinates + counter[2:0] + 320 * counter[5:3];
+	assign frame_data = img_pixel_data;
 	
 	always @ (posedge clk, negedge rst_n)
 		if(!rst_n)
