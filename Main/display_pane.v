@@ -55,6 +55,4 @@ module display_pane(clk, rst, fifo_full, fifo_wr_en, addr, data2output_2);
 	 end
 	 
 	 assign addr = ((row >> 1) * 320) + (col >> 1); //scaling by +8 factor, reads into ROM linearly
-		
-		
 endmodule

@@ -18,6 +18,7 @@ module draw_sprite(
 	// Move Logic inputs/outputs
 	reg [16:0] cord_flop;
 	reg [7:0] img_flop;
+	reg [23:0] rom_data_flop;
 
 	reg [1:0] state, next_state;
 	reg [5:0] counter;

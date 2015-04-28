@@ -5,13 +5,13 @@ module sprite_addr(address, coordinates, counter);
 
 	always@(*) begin
 		address = 0;
-		if(counter < 8) address = coordinates + counter;
-		else if(counter < 16) address = coordinates + 320*1 + counter - 8;
-		else if(counter < 24) address = coordinates + 320*2 + counter - 16;
-		else if(counter < 32) address = coordinates + 320*3 + counter - 24;
-		else if(counter < 40) address = coordinates + 320*4 + counter - 32;
-		else if(counter < 48) address = coordinates + 320*5 + counter - 40;
-		else if(counter < 56) address = coordinates + 320*6 + counter - 48;
+		if(counter < 6'd8) address = coordinates + counter;
+		else if(counter < 6'd16) address = coordinates + 320*1 + counter - 6'd8;
+		else if(counter < 6'd24) address = coordinates + 320*2 + counter - 6'd16;
+		else if(counter < 6'd32) address = coordinates + 320*3 + counter - 6'd24;
+		else if(counter < 6'd40) address = coordinates + 320*4 + counter - 6'd32;
+		else if(counter < 6'd48) address = coordinates + 320*5 + counter - 6'd40;
+		else if(counter < 6'd56) address = coordinates + 320*6 + counter - 6'd48;
 		else 				  address = coordinates + 320*7 + counter - 56;
 	end
 

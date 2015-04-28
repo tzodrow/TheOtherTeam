@@ -76,7 +76,7 @@ module spu(clk_100mhz,  rst, pixel_r, pixel_g, pixel_b, hsync, vsync, blank, clk
 	 
 	 ms_counter ms_counter1(
 		.clk(clk_100mhz_buf), // 100 MHz Clock
-		.rst_n(~rst),
+		.rst_n(dvi_rst),
 		.counter_done(counter_done)
 		);
 	 
@@ -88,7 +88,7 @@ module spu(clk_100mhz,  rst, pixel_r, pixel_g, pixel_b, hsync, vsync, blank, clk
 	 
 	 spu_controller spu_controller(
 		.clk(clk_100mhz_buf),
-		.rst_n(~rst),
+		.rst_n(dvi_rst),
 		.counter_done(counter_done),
 		.draw_map_done(draw_map_done),
 		.move_logic_done(move_logic_done),
@@ -106,11 +106,10 @@ module spu(clk_100mhz,  rst, pixel_r, pixel_g, pixel_b, hsync, vsync, blank, clk
 		draw_map draw_map0(.clk(clk_100mhz_buf), .rst(rst|~locked_dcm), .start(draw_map_start), .done(draw_map_done),
 						.frame_buf_we(map_frame_we), .frame_buf_addr(map_frame_buf_addr), .frame_buf_data(map_frame_buf_data));
 
-
-		assign frame_buff_data = (draw_map_en) ? map_frame_buf_data :
-								(move_logic_en) ? sprite_frame_buf_data : 0;
-		assign frame_buff_addr = (draw_map_en) ? map_frame_buf_addr:
-								(move_logic_en) ? sprite_frame_buf_addr : 0;
+		assign frame_buf_data = (draw_map_en) ? map_frame_buf_data :
+								(move_logic_en) ? sprite_frame_buf_data : 24'd0;
+		assign frame_buf_addr = (draw_map_en) ? map_frame_buf_addr:
+								(move_logic_en) ? sprite_frame_buf_addr : 24'd0;
 		assign frame_we = (draw_map_en) ? map_frame_we :
 						(move_logic_en) ? sprite_frame_we : 1'b0;
 					
@@ -139,7 +138,7 @@ module spu(clk_100mhz,  rst, pixel_r, pixel_g, pixel_b, hsync, vsync, blank, clk
 						.sprite_data_re(sprite_data_re), .sprite_data_we(sprite_data_we), .sprite_data_address(sprite_data_address), .sprite_data_write_data(sprite_data_write_data));
 						
 						
-						
+		//assign rom_data = 24'hFF0000; 			
 		//Image ROM
 		IMAGE_ROM sprite_image(
 			.clka(clk_100mhz_buf),
@@ -161,7 +160,7 @@ module spu(clk_100mhz,  rst, pixel_r, pixel_g, pixel_b, hsync, vsync, blank, clk
 		  .wea(frame_we), // input [0 : 0] wea
 		  .addra(frame_buf_addr), // input [16 : 0] addra
 		  .dina(frame_buf_data), // input [23 : 0] dina
-		  .clkb(clk_100mhz_buf), // input clkb
+		  .clkb(~clk_100mhz_buf), // input clkb
 		  .addrb(frame_read_addr), // input [16 : 0] addrb
 		  .doutb(fifo_in) // output [23 : 0] doutb
 		);
