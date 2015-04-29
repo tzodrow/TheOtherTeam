@@ -5,6 +5,14 @@ import warnings
 error_msg = "ERROR IN LINE"
 
 
+def is_comment(line):
+    args = line.split()
+    if args[0] == '#':
+        return True
+    else:
+        return False
+
+
 def check_valid(dictionary, value, arg_num, line_num):
     if value in dictionary:
         return True
@@ -501,8 +509,9 @@ def main(argv):
 
     line_counter = 0
     for line in f:
-        find_labels(line, line_counter)
-        line_counter += 1
+        if not is_comment(line):
+            find_labels(line, line_counter)
+            line_counter += 1
     f.close()
 
     f = open(inputfile, 'r')
