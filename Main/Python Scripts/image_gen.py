@@ -13,8 +13,8 @@ color = dict(
 )
 
 
-# Draw the Up Facing PacMan
-def draw_pacman_up(outfile):
+# Draw the Right Facing PacMan
+def draw_pacman_right(outfile):
     # First Line
     for x in range(0, 8):
         if x < 2 or x == 7:
@@ -79,7 +79,7 @@ def main(argv):
     o.write("memory_initialization_radix=16;\n")
     o.write("memory_initialization_vector=\n")
 
-    draw_pacman_up(o)
+    draw_pacman_right(o)
 
     print "Done!"
     o.close()

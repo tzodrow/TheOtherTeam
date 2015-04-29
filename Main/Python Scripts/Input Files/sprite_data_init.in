@@ -1,0 +1,12 @@
+Active, Moving, Direction(2), Blank(4)
+X Coordinate
+Y Coordinate
+Distance
+Speed
+Image Select
+Health
+Lives
+
+Sprite(Active, Moving, Direction(2), X Coordinate, Y Coordinate, Distance, Speed, Image Select, Health, Lives)
+        0       1           2           3               4           5       6       7           8       9
+Sprite(true, true, up, 20, 300, 40, 1, 0, 100, 2)
