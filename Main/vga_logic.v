@@ -49,9 +49,12 @@ module vga_logic(clk, rst, blank, comp_sync, hsync, vsync, pixel_x, pixel_y, fif
 	   if(rst) begin
 		  pixel_x <= 10'h0;
 		  pixel_y <= 10'h0;
-		end else begin
+		end else if(~fifo_empty) begin
 		  pixel_x <= next_pixel_x;
 		  pixel_y <= next_pixel_y;
+		end else begin
+		  pixel_x <= pixel_x;
+		  pixel_y <= pixel_y; 
 		end
 		
 		assign pixel_r = (~blank) ? 0 : fifo_out[23:16]; //only put on pixel-lines when blank is high

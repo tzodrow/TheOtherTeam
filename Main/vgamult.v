@@ -127,7 +127,7 @@ module spu(clk_100mhz,  rst, pixel_r, pixel_g, pixel_b, hsync, vsync, blank, clk
 		//assign coordinates = 0;
 		//assign img_sel = 8'h00;
 		
-		assign sprite_data_read_data = 64'h8000000000000000;
+		assign sprite_data_read_data = 64'hF000000F01000000;
 		
 		draw_sprite draw_sprite(.clk(clk_100mhz_buf), .rst_n(dvi_rst), .write_en(sprite_frame_we), .frame_addr(sprite_frame_buf_addr), .frame_data(sprite_frame_buf_data), 
 						.frame_write_valid(1'b1), .rom_addr(rom_addr), .read_en(sprite_read_en), .rom_data_valid(1'b1), .done(draw_sprite_done), 
@@ -186,7 +186,8 @@ module spu(clk_100mhz,  rst, pixel_r, pixel_g, pixel_b, hsync, vsync, blank, clk
     display_pane display_pane(	.clk(clk_100mhz_buf), 
 											.rst(rst|~locked_dcm), 
 											.fifo_full(fifo_full), 
-											.fifo_wr_en(fifo_wr_en), 
+											.fifo_wr_en(fifo_wr_en),
+											.draw_map_done(draw_map_done),
 											.addr(frame_read_addr),
 											.data2output_2(data2output_2)
 										);
