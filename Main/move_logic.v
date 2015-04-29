@@ -1,6 +1,6 @@
 module move_logic(input clk, input rst_n, input start, output done, input[63:0] sprite_data_read_data, input draw_sprite_rdy,   
    output draw_sprite_start, output [7:0] draw_sprite_image, output [16:0] draw_sprite_coordinates,
-   output sprite_data_re, output sprite_data_we, output[7:0] sprite_data_address, output[63:0] sprite_data_write_data);
+   output sprite_data_we, output[7:0] sprite_data_address, output[63:0] sprite_data_write_data);
 
    localparam IDLE = 3'b000;
    localparam GET_SPRITE_NUM = 3'b001;
@@ -8,6 +8,7 @@ module move_logic(input clk, input rst_n, input start, output done, input[63:0] 
    localparam UPDATE_COORD = 3'b011;
    localparam STORE_COORD = 3'b100;
    localparam SEND_DRAW_SPRITE = 3'b101;
+	localparam WAIT_FOR_DRAW_SPRITE = 3'b110; 
    
    localparam DIR_UP = 2'b00;
    localparam DIR_DOWN = 2'b01;
@@ -15,7 +16,7 @@ module move_logic(input clk, input rst_n, input start, output done, input[63:0] 
    localparam DIR_RIGHT = 2'b11; 
    
    wire sprite_counter_done;
-   wire[7:0] sprite_num;
+   wire sprite_num; //change back to 8 bit value
    wire  sprite_counter_next, sprite_data_active, sprite_data_moving, updated_sprite_moving; 
    wire[1:0] sprite_data_direction;
    reg[2:0] state, next_state;
@@ -27,11 +28,12 @@ module move_logic(input clk, input rst_n, input start, output done, input[63:0] 
    
    assign done = (state == IDLE) ? 1'b1 : 1'b0;  //indicate to controller when we are done/ready to start
    
-   sprite_counter sprite_counter(clk, rst_n, sprite_counter_next, sprite_counter_done, sprite_num);
-   assign sprite_counter_next = (state == UPDATE_COORD) ? 1'b1 : 1'b0; //changed to increment sprite_counter after saving off the previous data,
+	assign sprite_counter_done = (sprite_num == 1'b1) ? 1'b1 : 1'b0; 
+	
+   sprite_counter sprite_counter(clk, rst_n, sprite_counter_next, sprite_num);
+   assign sprite_counter_next = (next_state == GET_SPRITE_NUM) ? 1'b1 : 1'b0; //changed to increment sprite_counter after saving off the previous data,
 									// the memory should then be able to read that data right away
    
-   assign sprite_data_re = (state == GET_SPRITE_DATA) ? 1'b1 : 1'b0;
    assign sprite_data_we = (state == STORE_COORD) ? 1'b1 : 1'b0;
    assign sprite_data_address = sprite_num; 
    assign sprite_data_write_data = {sprite_data_saved[63], updated_sprite_moving, sprite_data_saved[61:56], 
@@ -105,14 +107,17 @@ module move_logic(input clk, input rst_n, input start, output done, input[63:0] 
                  next_state = SEND_DRAW_SPRITE;
               end 
          SEND_DRAW_SPRITE: begin
-                 if(!draw_sprite_rdy) next_state = SEND_DRAW_SPRITE; 
+                 if((draw_sprite_rdy == 1'b0)) next_state = SEND_DRAW_SPRITE; 
                  else begin
-                    if(sprite_counter_done) next_state = IDLE;
-                    else next_state = GET_SPRITE_NUM;
+						  next_state = WAIT_FOR_DRAW_SPRITE;
                 end
               end 
-         default: begin
-              next_state = IDLE;
+         default: begin //WAIT_FOR_DRAW_SPRITE
+						if((draw_sprite_rdy == 1'b0)) next_state = WAIT_FOR_DRAW_SPRITE; 
+						else begin
+							if(sprite_counter_done) next_state = IDLE;
+							else next_state = GET_SPRITE_NUM;
+						end
               end 
       
       endcase
