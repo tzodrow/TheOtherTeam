@@ -26,8 +26,6 @@ def main():
     Ghost.create(o, Constants.color['purple'])
     Ghost.create(o, Constants.color['light_blue'])
 
-
-
     for x in range(0, (256 - num_images) * 64 - 1):
         o.write(Constants.color['black'])
 
