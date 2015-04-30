@@ -84,8 +84,6 @@ module spu(clk_100mhz,  rst, pixel_r, pixel_g, pixel_b, hsync, vsync, blank, clk
 	 wire draw_map_start, draw_sprite_start, move_logic_start;
 	 wire draw_map_en, draw_sprite_en, move_logic_en;
 	 
-	 //assign draw_sprite_done = 1'b1;
-	 
 	 spu_controller spu_controller(
 		.clk(clk_100mhz_buf),
 		.rst_n(dvi_rst),
@@ -117,17 +115,12 @@ module spu(clk_100mhz,  rst, pixel_r, pixel_g, pixel_b, hsync, vsync, blank, clk
 		wire [16:0] coordinates;
 		wire [7:0] img_sel;
 		wire [23:0] rom_data;
-		//wire rom_data_valid;
 		wire [13:0] rom_addr;
 		wire sprite_read_en;
 		
 		wire sprite_data_we;
 		wire[7:0] sprite_data_address; 
 		wire[63:0] sprite_data_write_data, sprite_data_read_data;
-		//assign coordinates = 0;
-		//assign img_sel = 8'h00;
-		
-		//assign sprite_data_read_data = 64'hD00000FE03000000;
 		
 		sprite_data_RAM test_sprite_data_RAM (
 		  .clka(clk_100mhz_buf), // input clka
@@ -145,9 +138,7 @@ module spu(clk_100mhz,  rst, pixel_r, pixel_g, pixel_b, hsync, vsync, blank, clk
 		move_logic move_logic(.clk(clk_100mhz_buf), .rst_n(dvi_rst), .start(move_logic_start), .done(move_logic_done), .sprite_data_read_data(sprite_data_read_data), .draw_sprite_rdy(draw_sprite_done),   
 						.draw_sprite_start(draw_sprite_start), .draw_sprite_image(img_sel), .draw_sprite_coordinates(coordinates),
 						.sprite_data_we(sprite_data_we), .sprite_data_address(sprite_data_address), .sprite_data_write_data(sprite_data_write_data));
-						
-						
-		//assign rom_data = 24'hFF0000; 			
+		
 		//Image ROM
 		IMAGE_ROM sprite_image(
 			.clka(~clk_100mhz_buf),
@@ -161,8 +152,6 @@ module spu(clk_100mhz,  rst, pixel_r, pixel_g, pixel_b, hsync, vsync, blank, clk
 		wire [16:0] frame_read_addr; 				
 		
 		assign data2output = fifo_out;
-		
-		//assign fifo_in = 24'hFF0000;
 		
 		ROM FRAME_BUFFER (
 		  .clka(clk_100mhz_buf), // input clka
@@ -215,9 +204,5 @@ module spu(clk_100mhz,  rst, pixel_r, pixel_g, pixel_b, hsync, vsync, blank, clk
 						.full(fifo_full), // output full
 						.empty(fifo_empty) // output empty
 					);
-
-	
-
-	
 	 
 endmodule
