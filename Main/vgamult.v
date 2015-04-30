@@ -132,7 +132,7 @@ module spu(clk_100mhz,  rst, pixel_r, pixel_g, pixel_b, hsync, vsync, blank, clk
 		sprite_data_RAM test_sprite_data_RAM (
 		  .clka(clk_100mhz_buf), // input clka
 		  .wea(sprite_data_we), // input [0 : 0] wea
-		  .addra(sprite_data_address[1:0]), // input [1 : 0] addra
+		  .addra(sprite_data_address[2:0]), // input [1 : 0] addra
 		  .dina(sprite_data_write_data), // input [63 : 0] dina
 		  .douta(sprite_data_read_data) // output [63 : 0] douta
 		);
@@ -150,7 +150,7 @@ module spu(clk_100mhz,  rst, pixel_r, pixel_g, pixel_b, hsync, vsync, blank, clk
 		//assign rom_data = 24'hFF0000; 			
 		//Image ROM
 		IMAGE_ROM sprite_image(
-			.clka(clk_100mhz_buf),
+			.clka(~clk_100mhz_buf),
 			.addra(rom_addr),  // input [13 : 0] addra
 			.douta(rom_data)
 		);

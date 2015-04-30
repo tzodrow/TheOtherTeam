@@ -51,7 +51,7 @@ module draw_sprite(
 				cord_flop <= cord_flop;
 				img_flop <= img_flop;
 			end
-			if(rom_data_valid) rom_data_flop <= rom_data;
+			if(rom_data_valid) rom_data_flop <= rom_data; 
 			else rom_data_flop <= rom_data_flop;
 		end
 	end
