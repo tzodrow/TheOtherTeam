@@ -6,5 +6,5 @@ module WB(clk, rst_n, mem_result, sprite_ALU_result, mem_ALU_select, //Inputs
 	output [31:0] reg_WB_data;
 		  
 	assign reg_WB_data = (mem_ALU_select) ?  mem_result : sprite_ALU_result;
-	
+
 endmodule

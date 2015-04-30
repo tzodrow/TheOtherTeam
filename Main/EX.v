@@ -16,10 +16,6 @@ module EX(
 	input sprite_re,
 	input sprite_we,
 	input sprite_use_dst_reg,
-	input [63:0] full_sprite_data_in,
-	input [7:0]  full_sprite_addr,
-	input full_sprite_we,
-	output[63:0] full_sprite_data_out,
 	output[31:0] ALU_result,
 	output[31:0] sprite_data,
 	output reg flag_ov,
@@ -37,8 +33,6 @@ module EX(
    	localparam ALU_OP_SRA = 3'b111;
 	
 	wire[7:0] sprite_write_data; 
-	wire[10:0] sprite_data_address;
-	wire[2:0] sprite_code_translated;
 	wire[31:0] src0, src1, src1Not, mathResult, shiftInter; 
 	wire ov, neg, zero;
 	
@@ -96,16 +90,9 @@ module EX(
 	end
 	//SPRITE MEM STUFF
 	assign sprite_write_data = sprite_use_imm ? sprite_imm[7:0] : src0[7:0];
-	// take sprite action code and translate to index of sprite data memory block
-	assign sprite_code_translated = (sprite_action == 4'b1000) ? 3'b001 : 
-									(sprite_action == 4'b1001) ? 3'b010 :
-									(sprite_action == 4'b0011) ? 3'b100 :
-									(sprite_action == 4'b0111) ? 3'b101 :
-									(sprite_action == 4'b0000) ? 3'b110 :
-									(sprite_action == 4'b0010) ? 3'b111 :
-																 3'b000 ; // default: data byte
-	// calculate the sprite data address by taking original sprite number and adding index of byte code
-	assign sprite_data_address = {sprite_addr, 3'b0} + {7'b0, sprite_code_translated};
-	//sprite_mem(sprite_action, sprite_address, sprite_write_data, sprite_we, sprite_read_data, sprite_write_data);
+	
+	
+	//assign sprite_address = //sprite address calculation based on sprite_addr and sprite_fcn(attribute) 
+	//sprite_mem(sprite_fcn, sprite_addr, sprite_write_data, sprite_re, sprite_we, sprite_data);
 		
 endmodule

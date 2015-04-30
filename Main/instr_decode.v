@@ -2,11 +2,16 @@
 module instr_decode(clk,rst_n,instr, alu_opcode, imm, regS_data_ID, regT_data_ID, use_imm,
 	  use_dst_reg, is_branch_instr, update_neg, update_carry, update_overflow, update_zero, sprite_addr, 
 	  sprite_action, sprite_use_imm, sprite_imm, /*sprite_reg_data,*/ sprite_re, sprite_we, sprite_use_dst_reg, IOR, dst_reg, hlt,
-	  PC_in, PC_out, dst_reg_WB, dst_reg_data_WB, we, branch_addr, branch_conditions, mem_alu_select, mem_we, mem_re, use_sprite_mem);
+	  PC_in, PC_out, dst_reg_WB, dst_reg_data_WB, we, branch_addr, branch_conditions, mem_alu_select, mem_we, mem_re, use_sprite_mem,
+	  return_PC_addr_reg, next_PC, hlt, re_hlt, addr_hlt);
+
+
+input re_hlt;
+input [4:0]addr_hlt;
 
 input clk,rst_n;
 input [31:0]instr;
-input [21:0] PC_in;
+input [21:0] PC_in, next_PC;
 //input [31:0]regS_data, regT_data; //reg data from the reg file
 
 input [4:0]dst_reg_WB; //from WB
@@ -38,19 +43,21 @@ output [13:0]sprite_imm;
 output reg sprite_re, sprite_we, sprite_use_dst_reg;
 output reg IOR;//read signal for spart
 output reg use_sprite_mem;
+output reg [21:0]return_PC_addr_reg; //return address for the jump and link instr. No longer inside the reg file as r29
 
 reg reT, reS; //Reg read enable signals sent to the reg file
 reg sw_instr;
 wire [4:0]regS_addr, regT_addr; //to the reg file
+reg jr_instr, jal_instr;
  
 //reg_file iRF(.clk(clk),.regS(regS_addr),.regT(regT_addr),.p0(regS_data_ID),
 //.p1(regT_data_ID),.reS(reS),.reT(reT),.dst_reg_WB(dst_reg_WB),
 //.dst_reg_data_WB(dst_reg_data_WB),.we(we),.hlt(hlt));
 
 //reg A is port S, B is port T 
-register_file_a regS (
+register_file_S regS (
   .clka(clk), // input clka
-  .ena(reS | we), // input ena
+  .ena(reS | we | re_hlt | hlt), // input ena
   .wea(1'b0), // input [0 : 0] wea
   .addra(regS_addr), // input [4 : 0] addra
   .dina(32'b0), // input [31 : 0] dina
@@ -62,7 +69,8 @@ register_file_a regS (
   .doutb() // output [31 : 0] doutb
 );
 
-register_file_b regT (
+
+register_file_T regT (
   .clka(clk), // input clka
   .wea(we), // input [0 : 0] wea
   .addra(dst_reg_WB), // input [4 : 0] addra
@@ -75,6 +83,7 @@ register_file_b regT (
   .dinb(32'b0), // input [31 : 0] dinb
   .doutb(regT_data_ID) // output [31 : 0] doutb
 );
+
 
 localparam ADD = 5'b00000;
 localparam ADDi = 5'b00001;
@@ -111,7 +120,14 @@ localparam ALU_SLL = 3'b101;
 localparam ALU_SRL = 3'b110;
 localparam ALU_SRA = 3'b111;
 
-
+always  @(posedge clk, negedge rst_n) begin
+	if(!rst_n)
+			return_PC_addr_reg <= 22'd0;
+	else if (jal_instr)
+			return_PC_addr_reg <= next_PC;//PC_in;
+end
+	
+	
 wire [4:0] opcode;
 assign PC_out = PC_in;
 
@@ -122,14 +138,21 @@ assign dst_reg = (cord_instr == 1) ? instr[14:10]:
 		 instr[26:22];
 
 assign branch_conditions = instr[26:24];
-assign branch_addr = instr[21:0];
+
+assign branch_addr = (jr_instr && (instr[26:22] == 5'h1D)) ? return_PC_addr_reg : //if reg 29 is being accessed for a JR, then it's to return from a JAL instr
+							(jr_instr) 	 								  ? regS_data_ID[21:0] : //else it's just a normal JR
+																				 instr[21:0];			 //defaults to the LABEL field for JAL/branch instrs
+
 
 assign sprite_action = instr[26:23];
 
-assign regS_addr = (movi_instr == 1) ? 4'h0 : //want S to be 0 so acts like an ADDi instr
-		   (act_ld_instr == 1) ?  instr[14:10]: //bitfield for source reg is different for this ACT and LD gpu instructions
+assign regS_addr = (hlt | re_hlt) ? addr_hlt :
+			(movi_instr) ? 5'h00 : //want S to be 0 so acts like an ADDi instr
+		   (act_ld_instr) ?  instr[14:10]: //bitfield for source reg is different for this ACT and LD gpu instructions
+			(jr_instr) ? instr[26:22] :	
 		    instr[21:17];
-assign regT_addr = (mov_instr == 1) ? 4'h0 :
+			 
+assign regT_addr = (mov_instr == 1) ? 5'h00 :
 		   (sw_instr == 1) ? instr[26:22] : 
 		    instr[16:12];
 
@@ -157,6 +180,8 @@ always @(*) begin
  rd_instr = 0;
  movi_instr = 0;
  sw_instr = 0;
+ jr_instr = 0;
+ jal_instr = 0;
  mov_instr = 0;
  act_ld_instr = 0;
  //update_sign = 0; 
@@ -175,7 +200,7 @@ always @(*) begin
  sprite_we = 0;
  sprite_use_dst_reg = 0;
 
- alu_opcode = 0;
+ alu_opcode = 3'b000;
  is_branch_instr = 0;
 
  IOR = 0;
@@ -235,7 +260,7 @@ always @(*) begin
 
 	LW : begin
  	reS = 1;
-   	mem_re = 1;
+   mem_re = 1;
  	mem_alu_select = 1;
 	use_dst_reg = 1;
 	end	
@@ -323,12 +348,14 @@ always @(*) begin
 
 	JR : begin
  	reS = 1;
+	jr_instr = 1;
 	is_branch_instr = 1;
 	end
 
 	JAL : begin
-	use_dst_reg = 1;
+	//use_dst_reg = 1;
 	use_imm = 1;
+	jal_instr = 1;
 	is_branch_instr = 1;
 	end
 
