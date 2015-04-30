@@ -1,6 +1,6 @@
 R1:		
 R2:		
-R3:		
+R3:		Temporary register
 R4:		
 R5:		
 R6:		Keystroke Copy
@@ -10,7 +10,7 @@ R9:		X-coordinate divided by 8 (loop var)
 R10:	Y-coord copy (loop variable)
 R11:	
 R12:	
-R13:	
+R13:	byte of object avoidance MMAP?
 R14:	
 R15:	
 R16:	
@@ -19,3 +19,16 @@ R18:
 R19:	
 R20:	
 R21:	
+
+#object avoidance code, will add in once motion works
+				ADDi R8 R8 280
+				MOV R10 R8	
+CALC_POS:   	SRA R9 R7 3
+Y_LOOP:			SUB R3 R10 R0
+				B EQ Y_LOOP_END
+				ADDi R9 R9 40 #increment mem position
+				SUBi R10 R10 1 #decrement counter
+				B UNCON Y_LOOP
+Y_LOOP_END: 	LW R13 R9 150 	
+				SUBi R3 R13 1
+				B EQ KEYSTROKE
