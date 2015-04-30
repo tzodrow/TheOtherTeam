@@ -1,16 +1,6 @@
 import getopt
 import sys
-
-
-def pad(value, length):
-    zeros = length - len(value)
-    if zeros < 0:
-        zeros = -zeros
-        value = value[zeros:]
-    else:
-        for x in range(0, zeros):
-            value = '0' + value
-    return value
+from helpers.helpers import Helper
 
 
 def add_data(data, string):
@@ -58,54 +48,49 @@ def process(line, outfile):
         return False
 
     # Blank Space
-    data = add_data(data, pad(bin(int(0))[2:], 4))
+    data = add_data(data, Helper.pad(bin(int(0))[2:], 4))
 
     # X Coordinate
-    data = add_data(data, pad(bin(int(args[3]))[2:], 8))
+    data = add_data(data, Helper.pad(bin(int(args[3]))[2:], 8))
 
     # Y Coordinate
-    data = add_data(data, pad(bin(int(args[4]))[2:], 8))
+    data = add_data(data, Helper.pad(bin(int(args[4]))[2:], 8))
 
     # Distance
-    data = add_data(data, pad(bin(int(args[5]))[2:], 8))
+    data = add_data(data, Helper.pad(bin(int(args[5]))[2:], 8))
 
     # Speed
-    data = add_data(data, pad(bin(int(args[6]))[2:], 8))
+    data = add_data(data, Helper.pad(bin(int(args[6]))[2:], 8))
 
     #  Image Select
-    data = add_data(data, pad(bin(int(args[7]))[2:], 8))
+    data = add_data(data, Helper.pad(bin(int(args[7]))[2:], 8))
 
     # Health
-    data = add_data(data, pad(bin(int(args[8]))[2:], 8))
+    data = add_data(data, Helper.pad(bin(int(args[8]))[2:], 8))
 
     # Lives
-    data = add_data(data, pad(bin(int(args[9]))[2:], 8))
+    data = add_data(data, Helper.pad(bin(int(args[9]))[2:], 8))
 
-    print data
-    outfile.write(data + '\n')
-
-
+    outfile.write(data + ',\n')
 
 
 def main(argv):
-    inputfile = ''
-    outputfile = ''
+    input_file = ''
+    output_file = 'generated_coe/sprite_data_gen.coe'
     try:
-        opts, args = getopt.getopt(argv, "hi:o:", ["ifile=", "ofile="])
+        opts, args = getopt.getopt(argv, "hi:", ["ifile="])
     except getopt.GetoptError:
-        print 'test.py -i <inputfile> -o <outputfile>'
+        print 'test.py -i <inputfile>'
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-help':
-            print 'test.py -i <inputfile> -o <outputfile>'
+            print 'test.py -i <input_file>'
             sys.exit()
         elif opt in ("-i", "--ifile"):
-            inputfile = arg
-        elif opt in ("-o", "--ofile"):
-            outputfile = arg
+            input_file = arg
 
-    f = open(inputfile, 'r')
-    o = open(outputfile, 'w')
+    f = open(input_file, 'r')
+    o = open(output_file, 'w')
 
     o.write("memory_initialization_radix=2;\n")
     o.write("memory_initialization_vector=\n")
@@ -115,6 +100,12 @@ def main(argv):
         if process(line, o):
             print 'Error @ line ' + str(line_counter)
         line_counter += 1
+
+    for x in range(0, 256 - (line_counter+1)):
+        o.write(Helper.pad("0", 64) + ",\n")
+
+    o.write(Helper.pad("0", 64) + ";")
+
     f.close()
     o.close()
 

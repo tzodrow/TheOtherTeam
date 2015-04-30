@@ -358,10 +358,10 @@ class Function:
             instr = opcodes[opcode](args, line_num)
             if instr != Constants.error_msg:
                 print instr
-                outfile.write("%s\n" % instr)
+                outfile.write("%s,\n" % instr)
             else:
                 print Constants.error_msg + ": " + line
-                outfile.write("%s\n" % Constants.error_msg + ": " + line)
+                outfile.write("%s,\n" % Constants.error_msg + ": " + line)
         else:
             warnings.warn("Opcode(" + opcode + ") does not exist at line " + str(line_num), SyntaxWarning)
 

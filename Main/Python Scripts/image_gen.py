@@ -1,5 +1,5 @@
 from helpers.constants import Constants
-from helpers.draw_image_functions import Pacman, Ghost
+from helpers.draw_image_functions import Pacman, Ghost, Dot
 
 __author__ = 'tzodrow'
 
@@ -12,7 +12,7 @@ def main():
     o.write("memory_initialization_radix=16;\n")
     o.write("memory_initialization_vector=\n")
 
-    num_images = 9
+    num_images = 11
 
     # Image Order in Memory
     Pacman.draw_pacman_up(o)
@@ -25,6 +25,9 @@ def main():
     Ghost.create(o, Constants.color['red'])
     Ghost.create(o, Constants.color['purple'])
     Ghost.create(o, Constants.color['light_blue'])
+
+    Dot.create(o, "small")
+    Dot.create(o, "large")
 
     for x in range(0, (256 - num_images) * 64 - 1):
         o.write(Constants.color['black'])

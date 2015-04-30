@@ -1,8 +1,6 @@
 import getopt
 import sys
-import warnings
-from helpers.assembly_functions import Function, opcodes
-from helpers.constants import Constants
+from helpers.assembly_functions import Function
 
 
 def main(argv):
@@ -22,6 +20,9 @@ def main(argv):
 
     f = open(input_file, 'r')
     o = open(output_file, 'w')
+
+    o.write("memory_initialization_radix=2;\n")
+    o.write("memory_initialization_vector=\n")
 
     line_counter = 0
     for line in f:

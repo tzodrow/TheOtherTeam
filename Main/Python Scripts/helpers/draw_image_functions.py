@@ -8,6 +8,7 @@ class Pacman:
 
     @staticmethod
     def draw_pacman_right(outfile):
+        print "Drawing Pacman Right..."
         # First Line
         for x in range(0, 8):
             if x < 2 or x == 7:
@@ -67,6 +68,7 @@ class Pacman:
     # Draw the Left Facing PacMan
     @staticmethod
     def draw_pacman_left(outfile):
+        print "Drawing Pacman Left..."
         # First Line
         for x in range(0, 8):
             if x == 0 or x > 5:
@@ -126,6 +128,7 @@ class Pacman:
     # Draw the Down Facing PacMan
     @staticmethod
     def draw_pacman_down(outfile):
+        print "Drawing Pacman Down..."
         # First Line
         for x in range(0, 8):
             if x < 2 or x > 5:
@@ -176,6 +179,7 @@ class Pacman:
     # Draw the Up Facing PacMan
     @staticmethod
     def draw_pacman_up(outfile):
+        print "Drawing Pacman Up..."
         # First Line
         for x in range(0, 8):
             outfile.write(Constants.color['black'])
@@ -234,6 +238,7 @@ class Ghost:
     """
     @staticmethod
     def create(outfile, ghost_color):
+        print "Drawing a Ghost..."
         # First Line
         for x in range(0, 8):
             if x < 2 or x > 5:
@@ -267,3 +272,51 @@ class Ghost:
                 outfile.write(Constants.color['black'])
             else:
                 outfile.write(ghost_color)
+
+
+class Dot:
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def create(outfile, size):
+        if size == "small":
+            print "Drawing Small Dot..."
+            # First, Second, Third Lines
+            for y in range(0, 3):
+                for x in range(0, 8):
+                    outfile.write(Constants.color['black'])
+
+            # Forth and Fifth Lines
+            for y in range(0, 2):
+                for x in range(0, 8):
+                    if x != 3 or x != 4:
+                        outfile.write(Constants.color['black'])
+                    else:
+                        outfile.write(Constants.color['yellow'])
+
+            # Sixth, Seventh, Eighth Lines
+            for y in range(0, 3):
+                for x in range(0, 8):
+                    outfile.write(Constants.color['black'])
+
+        elif size == "large":
+            print "Drawing Large Dot..."
+            # First and Second Lines
+            for y in range(0, 2):
+                for x in range(0, 8):
+                    outfile.write(Constants.color['black'])
+
+            # Third, Forth, Fifth, Sixth Lines
+            for y in range(0, 4):
+                for x in range(0, 8):
+                    if x < 2 or x > 5:
+                        outfile.write(Constants.color['black'])
+                    else:
+                        outfile.write(Constants.color['yellow'])
+
+            # Seventh and Eight Lines
+            for y in range(0, 2):
+                for x in range(0, 8):
+                    outfile.write(Constants.color['black'])
