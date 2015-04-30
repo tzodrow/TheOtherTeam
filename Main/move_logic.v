@@ -16,7 +16,7 @@ module move_logic(input clk, input rst_n, input start, output done, input[63:0] 
    localparam DIR_RIGHT = 2'b11; 
    
    wire sprite_counter_done;
-   wire sprite_num; //change back to 8 bit value
+   wire[1:0] sprite_num; //change back to 8 bit value
    wire  sprite_counter_next, sprite_data_active, sprite_data_moving, updated_sprite_moving; 
    wire[1:0] sprite_data_direction;
    reg[2:0] state, next_state;
@@ -28,7 +28,7 @@ module move_logic(input clk, input rst_n, input start, output done, input[63:0] 
    
    assign done = (state == IDLE) ? 1'b1 : 1'b0;  //indicate to controller when we are done/ready to start
    
-	assign sprite_counter_done = (sprite_num == 1'b1) ? 1'b1 : 1'b0; 
+	assign sprite_counter_done = (sprite_num == 2'b11) ? 1'b1 : 1'b0; 
 	
    sprite_counter sprite_counter(clk, rst_n, sprite_counter_next, sprite_num);
    assign sprite_counter_next = (next_state == GET_SPRITE_NUM) ? 1'b1 : 1'b0; //changed to increment sprite_counter after saving off the previous data,
