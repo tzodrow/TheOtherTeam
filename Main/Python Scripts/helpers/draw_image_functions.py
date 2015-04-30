@@ -160,14 +160,14 @@ class Pacman:
 
         # Sixth Line
         for x in range(0, 8):
-            if x > 1 or x < 6:
+            if x < 1 or x > 6:
                 outfile.write(Constants.color['black'])
             else:
                 outfile.write(Constants.color['yellow'])
 
         # Seventh Line
         for x in range(0, 8):
-            if x != 0 and x != 7:
+            if x > 0 or x < 7:
                 outfile.write(Constants.color['black'])
             else:
                 outfile.write(Constants.color['yellow'])
@@ -186,14 +186,14 @@ class Pacman:
 
         # Second Line
         for x in range(0, 8):
-            if x != 0 and x != 7:
+            if x > 0 or x < 7:
                 outfile.write(Constants.color['black'])
             else:
                 outfile.write(Constants.color['yellow'])
 
         # Third Line
         for x in range(0, 8):
-            if x > 1 or x < 6:
+            if x < 1 or x > 6:
                 outfile.write(Constants.color['black'])
             else:
                 outfile.write(Constants.color['yellow'])
