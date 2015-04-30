@@ -254,7 +254,7 @@ class Ghost:
                 outfile.write(ghost_color)
 
         # Third and Forth Line
-        for y in range (0, 2):
+        for y in range(0, 2):
             for x in range(0, 8):
                 if x == 2 or x == 5:
                     outfile.write(Constants.color['white'])
