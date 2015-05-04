@@ -52,7 +52,7 @@ always @(posedge clk, negedge rst_n)
 		MEM_ALU_result <= 0;
 		MEM_t_data <= 0;
 	end 
-	else if (!stall & !hlt) begin
+	else if (!hlt) begin
 		MEM_sprite_ALU_select <= EX_use_sprite_mem;
 		MEM_mem_ALU_select <= EX_mem_ALU_select;                  
 		MEM_flag_ov <= EX_ov; 
