@@ -25,32 +25,24 @@ module driver(
     inout [7:0] databus
     );
 
+	// SPART
 	reg sel,wrt_rx_data;
-	wire[31:0] IF_instr;
-	wire[21:0] IF_PC, ID_is_branch, IF_next_PC, pc;
-	wire stall, flush, hlt;
-	wire rst_n;
-	assign stall = 0;
-	assign flush = 0;
+	reg [3:0] state, nxt_state;
+	reg [7:0] data_out, rx_data;
 	
-	wire IF_instr_mem_re;
+	reg inc_PC, dec_PC;
+	wire [7:0] dst_reg_ID_EX_ascii;
+	wire [7:0] dst_reg_EX_MEM_ascii;
+	reg rst_instr_addr;
 	
-	assign pc = IF_PC;
+	// Tim's Testing Values
+	reg [31:0] val0, val1, val2, val3, val4, val5;
+	reg [3:0] we_counter_tim;
+	reg [2:0] hex_counter;
+	reg rst_hex_counter, dec_hex_counter;
 	
-	pc PC(
-		.clk(clk),
-		.rst_n(rst_n),
-		.nxt_pc(IF_next_PC),
-		.curr_pc(IF_PC));
-	
-	assign IF_instr_mem_re = ~stall; 
-	// Number of instructions (will only run through instuctions at addres 0 to value - 1)
 	localparam NUM_INSTRUCTIONS = 24'h000006;
-	assign IF_next_PC = (rst) ? 0 :
-								(stall | hlt | (IF_PC > NUM_INSTRUCTIONS)) ? IF_PC : IF_PC + 1;
-
-	assign rst_n = ~rst;
-
+	
 	//////////////////////////////
 	// States for State Machine //
 	//////////////////////////////
@@ -65,53 +57,97 @@ module driver(
 	localparam PRINT_PC = 4'b1000;
 	localparam SEND_LONG_HEX = 4'b1001;
 	localparam SEND_SPACE = 4'b1010;
-	////////////////////////////////////////
-	// Registers used for control signals //
-   ////////////////////////////////////////
-    
-   // State Registers
-   reg [3:0] state, nxt_state;
-   // Data Registers
-   reg [7:0] data_out, rx_data;
+
+	
+	wire[31:0] IF_instr;
+	wire[21:0] IF_PC, ID_is_branch, IF_next_PC;
+	wire stall, flush, hlt;
+	wire rst_n;
+	
 	reg re_hlt;
-	reg inc_PC, dec_PC;
 	reg[7:0] instr_counter;
-	wire [21:0]instr_addr;
+	wire [21:0] instr_addr;
 	wire [21:0] EX_PC, EX_PC_out;
-	
-	assign instr_addr = {{14{1'b0}}, instr_counter};
-	
-	instr_fetch instr_fetch(
-		.clk(clk), 
-		.rst_n(rst_n), 
-		.re(1), 
-		.addr(pc), 
-		.instr(IF_instr));
 	
 	//ID Stage Wire Declarations
 	wire ID_hlt, ID_use_imm, ID_use_dst_reg;
-	wire ID_update_neg, ID_update_carry, ID_update_ov, ID_update_zero; //flag updates
+	wire ID_update_neg, ID_update_carry, ID_update_ov, ID_update_zero;
 	wire[2:0] ID_alu_opcode, ID_branch_conditions;
-	wire[4:0] ID_dst_reg;
+	wire[4:0] ID_dst_reg, ID_regS_addr, ID_regT_addr;
 	wire[16:0] ID_imm; 
 	wire[21:0] ID_PC, ID_PC_out, ID_branch_addr;
 	wire[31:0] ID_instr, ID_s_data, ID_t_data; 
 	wire ID_mem_alu_select, ID_mem_we, ID_mem_re, ID_use_sprite_mem;
+	wire[21:0] ID_return_PC_addr_reg;
 
 	//sprite wires
 	wire ID_sprite_use_imm, ID_sprite_re, ID_sprite_we, ID_sprite_use_dst_reg;
 	wire[3:0] ID_sprite_action;
 	wire[7:0] ID_sprite_addr;
 	wire[13:0] ID_sprite_imm;
-
-	//SPART
+	
 	wire IOR;
-
-	//From WB Stage to Reg File in decode module
+	
+	wire EX_use_imm;
+	wire EX_update_ov, EX_update_neg, EX_update_carry, EX_update_zero;
+	wire EX_ov, EX_neg, EX_zero, EX_carry;
+	wire [2:0] EX_alu_opcode, EX_branch_conditions;
+	wire [16:0] EX_imm;
+	wire [31:0] EX_s_data, EX_t_data, EX_ALU_result;
+	wire [4:0] EX_dst_reg;
+	// sprite wires
+	wire EX_sprite_use_imm, EX_sprite_re, EX_sprite_we, EX_sprite_use_dst_reg, EX_mem_alu_select;
+	wire [3:0] EX_sprite_action;
+	wire [7:0] EX_sprite_addr;
+	wire [13:0] EX_sprite_imm;
+	wire [31:0] EX_sprite_data;
+	
+	wire MEM_sprite_ALU_select, MEM_mem_ALU_select, MEM_flag_ov, MEM_flag_neg, MEM_flag_zero, MEM_re, MEM_we, MEM_use_dst_reg, MEM_use_sprite_mem;
+	wire [2:0] MEM_branch_cond;
+	wire [4:0] MEM_addr, MEM_dst_reg;
+	wire [21:0] MEM_PC, MEM_PC_out;
+	wire [31:0] MEM_data, MEM_sprite_data, MEM_instr, MEM_sprite_ALU_result, MEM_mem_result, MEM_ALU_result, MEM_t_data;
+	
+	wire [21:0] WB_PC, WB_PC_out;
+	wire [31:0] WB_mem_result, WB_sprite_ALU_result, WB_instr;
 	wire WB_we;
 	wire [4:0] WB_dst_reg;
 	wire [31:0] WB_dst_reg_data_WB;
 	wire [31:0] reg_WB_data;
+	
+	assign stall = 	(MEM_dst_reg == 5'h00 || EX_dst_reg == 5'h00) ? 0 :
+		(MEM_dst_reg == ID_regS_addr || MEM_dst_reg == ID_regT_addr) ? 1 :
+		(EX_dst_reg == ID_regS_addr || EX_dst_reg == ID_regS_addr) ? 1 : 0;
+
+	assign instr_addr = {{14{1'b0}}, instr_counter};
+	assign dst_reg_EX_MEM_ascii = ({3'b000, MEM_dst_reg} + 8'h30);
+	
+	assign rst_n = ~rst;
+	assign dst_reg_ID_EX_ascii = ({3'b000, EX_dst_reg} + 8'h30);
+	// Tri-state buffer used to receive and send data via the databus
+    // Sel high = output, Sel low = input
+	assign databus = sel ? data_out : 8'bz;
+	
+	pc PC(
+		.clk(clk),
+		.rst_n(rst_n),
+		.nxt_pc(IF_next_PC),
+		.curr_pc(IF_PC));
+	
+	PC_MUX PC_MUX(
+		.pc(IF_PC),
+		.br_pc(ID_branch_addr),
+		.taken(is_branch_instr),
+		.halt(hlt),
+		.nxt_pc(IF_next_PC),
+		.flush(flush));
+	
+	instr_fetch instr_fetch(
+		.clk(clk), 
+		.rst_n(rst_n),
+		.hlt(hlt),
+		.addr(IF_PC), 
+		.instr(IF_instr));
 	
 	//////////////////
 	//PIPE: Instruction Fetch - Instruction Decode
@@ -122,12 +158,10 @@ module driver(
 		.hlt(hlt), 
 		.stall(stall), 
 		.flush(flush), 
-		.IF_instr(IF_instr), 
-		.ID_instr(ID_instr), 
+		.IF_instr(IF_instr),
 		.IF_PC(IF_PC), 
+		.ID_instr(ID_instr), 
 		.ID_PC(ID_PC));
-
-	wire[21:0] ID_return_PC_addr_reg;
 
 	//ID Module Declaration
 	instr_decode inst_decTest(
@@ -169,27 +203,12 @@ module driver(
 		.return_PC_addr_reg(ID_return_PC_addr_reg), 
 		.next_PC(EX_PC_out),
 		.re_hlt(re_hlt), 
-		.addr_hlt(instr_counter[4:0]));
-
-	//////////////////
-	//Execute
-	//////////////////
-	
-	// EX Stage Wire Declarations
-	wire EX_use_imm;
-	wire EX_update_ov, EX_update_neg, EX_update_carry, EX_update_zero;
-	wire EX_ov, EX_neg, EX_zero, EX_carry;
-	wire [2:0] EX_alu_opcode, EX_branch_conditions;
-	wire [16:0] EX_imm;
-	wire [31:0] EX_s_data, EX_t_data, EX_ALU_result;
-	wire [4:0] EX_dst_reg;
-	// sprite wires
-	wire EX_sprite_use_imm, EX_sprite_re, EX_sprite_we, EX_sprite_use_dst_reg, EX_mem_alu_select;
-	wire [3:0] EX_sprite_action;
-	wire [7:0] EX_sprite_addr;
-	wire [13:0] EX_sprite_imm;
-	wire [31:0] EX_sprite_data;
-
+		.addr_hlt(instr_counter[4:0]),
+		.regS_addr(ID_regS_addr), 
+		.regT_addr(ID_regT_addr),
+		.EX_ov(EX_ov), 
+		.EX_neg(EX_neg), 
+		.EX_zero(EX_zero));
 
 	//////////////////
 	//PIPE: Instruction Decode - Execute
@@ -250,12 +269,6 @@ module driver(
 		.EX_mem_we(EX_mem_we), 
 		.EX_mem_re(EX_mem_re), 
 		.EX_use_sprite_mem(EX_use_sprite_mem));
-
-	//EX Logic
-	
-	wire [7:0] dst_reg_ID_EX_ascii;
-	assign dst_reg_ID_EX_ascii = ({3'b000, EX_dst_reg} + 8'h30);
-	
 	
 	//EX Module Declaration
 	EX EX(
@@ -265,7 +278,7 @@ module driver(
 		.update_flag_ov(EX_update_ov), 
 		.update_flag_neg(EX_update_neg), 
 		.update_flag_zero(EX_update_zero),
-	   .t_data(EX_t_data), 
+		.t_data(EX_t_data), 
 		.s_data(EX_s_data), 
 		.imm(EX_imm), 
 		.use_imm(EX_use_imm), 
@@ -282,13 +295,6 @@ module driver(
 		.flag_neg(EX_neg), 
 		.flag_zero(EX_zero));
 	
-	//MEM Stage Wire Declarations
-	wire MEM_sprite_ALU_select, MEM_mem_ALU_select, MEM_flag_ov, MEM_flag_neg, MEM_flag_zero, MEM_re, MEM_we, MEM_use_dst_reg, MEM_use_sprite_mem;
-	wire [2:0] MEM_branch_cond;
-	wire [4:0] MEM_addr, MEM_dst_reg;
-	wire [21:0] MEM_PC, MEM_PC_out;
-	wire [31:0] MEM_data, MEM_sprite_data, MEM_instr, MEM_sprite_ALU_result, MEM_mem_result, MEM_ALU_result, MEM_t_data;
-
 	//////////////////
 	//PIPE: Execute - Memory
 	//////////////////
@@ -333,18 +339,10 @@ module driver(
 		.MEM_dst_reg(MEM_dst_reg), 
 		.MEM_ALU_result(MEM_ALU_result), 
 		.MEM_t_data(MEM_t_data)); 
-	
-	wire [7:0] dst_reg_EX_MEM_ascii;
-	assign dst_reg_EX_MEM_ascii = ({3'b000, MEM_dst_reg} + 8'h30);
 
 	//////////////////
 	//Memory
 	//////////////////
-	
-	
-	wire [21:0] WB_PC, WB_PC_out;
-	wire [31:0] WB_mem_result, WB_sprite_ALU_result, WB_instr; 
-	
 	
 	MEM mem_Test(
 		.clk(clk), 
@@ -398,7 +396,6 @@ module driver(
 	//Writeback
 	//////////////////
 
-
 	WB wb_Test(
 		.clk(clk), 
 		.rst_n(rst_n), 
@@ -406,8 +403,6 @@ module driver(
 		.sprite_ALU_result(WB_sprite_ALU_result), 
 		.mem_ALU_select(WB_mem_ALU_select), //Inputs
 		.reg_WB_data(reg_WB_data)); //Outputs
-		
-	reg rst_instr_addr;
 	  
 	always  @ (posedge clk, posedge rst) begin
 		if(rst)
@@ -421,10 +416,6 @@ module driver(
 		else if (ID_is_branch)
 			instr_counter <= ID_branch_addr[7:0];
 	end
-	
-    // Tri-state buffer used to receive and send data via the databuse
-    // Sel high = output, Sel low = input
-	assign databus = sel ? data_out : 8'bz;
 	
     // RX Received Data Flop
 	always  @ (posedge clk, posedge rst) begin
@@ -442,12 +433,6 @@ module driver(
 			state <= nxt_state;
 	end
 	
-	// Output Testing - Tim
-	reg [31:0] val0, val1, val2, val3, val4, val5;
-	reg [3:0] we_counter_tim;
-	reg [2:0] hex_counter;
-	reg rst_hex_counter, dec_hex_counter;
-	
 	always @ (posedge clk, posedge rst) begin
 		if(rst)
 			hex_counter <= 0;
@@ -457,14 +442,6 @@ module driver(
 			hex_counter <= hex_counter - 1;
 	end
 	
-	always @ (posedge clk, posedge rst) begin
-		if(rst)
-			we_counter_tim <= 0;
-		else if(WB_use_dst_reg)
-			we_counter_tim <= we_counter_tim + 1;
-	end
-	
-	// TODO: Reading only register 1 and 2 multiple times
 	always @ (posedge clk, posedge rst) begin
 		if(rst) begin
 			val0 <= 0;

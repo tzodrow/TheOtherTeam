@@ -1,17 +1,21 @@
 module instr_fetch(
 		input clk,
 		input rst_n,
-		input re,
+		input hlt,
 		input [21:0] addr,
 		output [31:0] instr
 		);
 	
-	//instr_mem im0(clk, rst_n, re, addr, instr);
+	localparam HALT = 32'hf800000000000000;
+	
+	wire [31:0] mem_instr;
+	
+	assign instr = (hlt) ? HALT : mem_instr;
+	
 	instr_mem16 your_instance_name (
-  .clka(clk), // input clka
-  .addra(addr[6:0]), // input [6 : 0] addra
-  .douta(instr) // output [31 : 0] douta
+		.clka(clk), // input clka
+		.addra(addr[6:0]), // input [6 : 0] addra
+		.douta(mem_instr) // output [31 : 0] douta
 	);
 	
-
 endmodule

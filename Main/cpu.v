@@ -18,7 +18,7 @@ wire [31:0] reg_WB_data;
 
 //IF Stage Wire Declarations
 wire IF_instr_mem_re;
-wire[21:0] IF_PC, IF_next_PC;
+wire[21:0] IF_PC, IF_next_PC, pc;
 wire[31:0] IF_instr;
 wire ID_is_branch; //used for determining next_PC value
 wire[21:0] ID_branch_addr; //used for determining 

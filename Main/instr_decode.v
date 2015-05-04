@@ -3,9 +3,8 @@ module instr_decode(clk,rst_n,instr, alu_opcode, imm, regS_data_ID, regT_data_ID
 	  use_dst_reg, is_branch_instr, update_neg, update_carry, update_overflow, update_zero, sprite_addr, 
 	  sprite_action, sprite_use_imm, sprite_imm, /*sprite_reg_data,*/ sprite_re, sprite_we, sprite_use_dst_reg, IOR, dst_reg, hlt,
 	  PC_in, PC_out, dst_reg_WB, dst_reg_data_WB, we, branch_addr, branch_conditions, mem_alu_select, mem_we, mem_re, use_sprite_mem,
-	  return_PC_addr_reg, next_PC, re_hlt, addr_hlt, regS_addr, regT_addr);
-
-
+	  return_PC_addr_reg, next_PC, re_hlt, addr_hlt, regS_addr, regT_addr, EX_ov, EX_neg, EX_zero);
+	
 input re_hlt;
 input [4:0]addr_hlt;
 
@@ -17,6 +16,7 @@ input [21:0] PC_in, next_PC;
 input [4:0]dst_reg_WB; //from WB
 input [31:0]dst_reg_data_WB; //from WB
 input we; //from WB
+input EX_ov, EX_neg, EX_zero;
 
 output reg hlt;
 
@@ -43,16 +43,16 @@ output [13:0]sprite_imm;
 output reg sprite_re, sprite_we, sprite_use_dst_reg;
 output reg IOR;//read signal for spart
 output reg use_sprite_mem;
-output reg [21:0]return_PC_addr_reg; //return address for the jump and link instr. No longer inside the reg file as r29
+output reg [21:0] return_PC_addr_reg; //return address for the jump and link instr. No longer inside the reg file as r29
 
 reg reT, reS; //Reg read enable signals sent to the reg file
 reg sw_instr;
 output [4:0]regS_addr, regT_addr; //to the reg file
 reg jr_instr, jal_instr;
- 
-//reg_file iRF(.clk(clk),.regS(regS_addr),.regT(regT_addr),.p0(regS_data_ID),
-//.p1(regT_data_ID),.reS(reS),.reT(reT),.dst_reg_WB(dst_reg_WB),
-//.dst_reg_data_WB(dst_reg_data_WB),.we(we),.hlt(hlt));
+
+// Check for R0, if reg_in == 5'h00
+wire [31:0] data_in;
+assign data_in = 0;
 
 //reg A is port S, B is port T 
 register_file_S regS (
@@ -69,6 +69,8 @@ register_file_S regS (
   .doutb() // output [31 : 0] doutb
 );
 
+///// CHECK THIS 				/////
+///// DOES THIS MAKE SENSE ??? 	/////
 
 register_file_T regT (
   .clka(clk), // input clka
@@ -120,11 +122,20 @@ localparam ALU_SLL = 3'b101;
 localparam ALU_SRL = 3'b110;
 localparam ALU_SRA = 3'b111;
 
+localparam NEQ = 3'b000;
+localparam EQ = 3'b001;
+localparam GT = 3'b010;
+localparam LT = 3'b011;
+localparam GTE = 3'b100;
+localparam LTE = 3'b101;
+localparam OVFL = 3'b110;
+localparam UNCOND = 3'b111;
+
 always  @(posedge clk, negedge rst_n) begin
 	if(!rst_n)
 			return_PC_addr_reg <= 22'd0;
 	else if (jal_instr)
-			return_PC_addr_reg <= next_PC;//PC_in;
+			return_PC_addr_reg <= next_PC;
 end
 	
 	
@@ -133,7 +144,6 @@ assign PC_out = PC_in;
 
 reg cord_instr, rd_instr, mov_instr, movi_instr, act_ld_instr; //asserted for the CORD and RD gpu instructions for determining dst_reg bitfield
 
-// TODO -- this may be the wrong address
 assign dst_reg = (cord_instr == 1) ? instr[14:10]:
 		 (rd_instr == 1) ? instr[14:10]:
 		 instr[26:22];
@@ -185,7 +195,6 @@ always @(*) begin
  jal_instr = 0;
  mov_instr = 0;
  act_ld_instr = 0;
- //update_sign = 0; 
  update_neg = 0; 
  update_carry = 0; 
  update_overflow = 0; 
@@ -195,7 +204,6 @@ always @(*) begin
  mem_alu_select = 0; 
  mem_we = 0;
  mem_re = 0;
- //use_alu = 0;
 
  sprite_re = 0;
  sprite_we = 0;
@@ -211,52 +219,44 @@ always @(*) begin
  	reT = 1;
  	reS = 1;
 	use_dst_reg = 1;
-	//update_sign = 1; 
  	update_neg = 1; 
  	update_carry = 1; 
  	update_overflow = 1; 
  	update_zero = 1;
 	alu_opcode = ALU_ADD;
-	//use_alu = 1;
 	end
 
 	ADDi : begin
  	reS = 1;
 	use_imm = 1;
 	use_dst_reg = 1;
-	//update_sign = 1; 
  	update_neg = 1; 
  	update_carry = 1; 
  	update_overflow = 1; 
  	update_zero = 1;
 	alu_opcode = ALU_ADD;
-	//use_alu = 1;
 	end
 
 	SUB : begin
  	reT = 1;
  	reS = 1;
   	use_dst_reg = 1;
-	//update_sign = 1; 
  	update_neg = 1; 
  	update_carry = 1; 
  	update_overflow = 1; 
  	update_zero = 1;
 	alu_opcode = ALU_SUB;
-	//use_alu = 1;
 	end
 
 	SUBi : begin 
  	reS = 1;
 	use_dst_reg = 1;
-	use_imm = 1;
-	//update_sign = 1; 
+	use_imm = 1; 
  	update_neg = 1; 
  	update_carry = 1; 
  	update_overflow = 1; 
  	update_zero = 1;
 	alu_opcode = ALU_SUB;   //CHECK
-	//use_alu = 1;
 	end
 
 	LW : begin
@@ -315,92 +315,118 @@ always @(*) begin
 	end
 
 	SLL : begin
- 	reS = 1;
-	use_dst_reg = 1;
-	use_imm = 1;
-	update_zero = 1;
-	update_overflow = 1; //not sure
-	alu_opcode = ALU_SLL;
-	//use_alu = 1;
+	 	reS = 1;
+		use_dst_reg = 1;
+		use_imm = 1;
+		update_zero = 1;
+		update_overflow = 1; //not sure
+		alu_opcode = ALU_SLL;
 	end
 
 	SRL : begin
- 	reS = 1;
-	use_dst_reg = 1;
-	use_imm = 1;
-	update_zero = 1;
-	alu_opcode = ALU_SRL;
-	//use_alu = 1;
+	 	reS = 1;
+		use_dst_reg = 1;
+		use_imm = 1;
+		update_zero = 1;
+		alu_opcode = ALU_SRL;
 	end
 
 	SRA : begin
- 	reS = 1;
-	use_dst_reg = 1;
-	use_imm = 1;
-	update_zero = 1;
-	alu_opcode = ALU_SRA;
-	//use_alu = 1;
+	 	reS = 1;
+		use_dst_reg = 1;
+		use_imm = 1;
+		update_zero = 1;
+		alu_opcode = ALU_SRA;
 	end
 
 	B : begin
-	use_imm = 1;
-	is_branch_instr = 1;
+		case(branch_conditions)
+			NEQ : begin
+				if(~EX_zero)
+					is_branch_instr = 1;
+			end
+			EQ : begin
+				if(EX_zero)
+					is_branch_instr = 1;
+			end
+			GT : begin
+				if(~EX_neg & ~EX_zero) 
+					is_branch_instr = 1;
+			end
+			LT : begin
+				if(EX_neg & ~EX_zero)
+					is_branch_instr = 1;
+			end
+			GTE : begin
+				if(~EX_neg | EX_zero)
+					is_branch_instr = 1;
+			end
+			LTE : begin
+				if(EX_neg | EX_zero)
+					is_branch_instr = 1;
+			end
+			OVFL : begin
+				if(EX_ov)
+					is_branch_instr = 1;
+			end
+			UNCOND : begin
+				is_branch_instr = 1;
+			end
+		endcase	
+		use_imm = 1;
 	end
 
 	JR : begin
- 	reS = 1;
-	jr_instr = 1;
-	is_branch_instr = 1;
+	 	reS = 1;
+		jr_instr = 1;
+		is_branch_instr = 1;
 	end
 
 	JAL : begin
-	//use_dst_reg = 1;
-	use_imm = 1;
-	jal_instr = 1;
-	is_branch_instr = 1;
+		use_imm = 1;
+		jal_instr = 1;
+		is_branch_instr = 1;
 	end
 
 	HALT : begin
-	hlt = 1;
+		hlt = 1;
 	end
 
 	ACT : begin
-	sprite_we = 1;
-	act_ld_instr = 1;
+		sprite_we = 1;
+		act_ld_instr = 1;
 	end
 
 	LD : begin
-	sprite_we = 1;
-	act_ld_instr = 1;
+		sprite_we = 1;
+		act_ld_instr = 1;
 	end
 
 	RD : begin
-	sprite_re = 1;
-	sprite_use_dst_reg = 1;
-	rd_instr = 1;
-	use_sprite_mem = 1;
+		sprite_re = 1;
+		sprite_use_dst_reg = 1;
+		rd_instr = 1;
+		use_sprite_mem = 1;
 	end
 
 	MAP : begin
-	sprite_we = 1;
+		sprite_we = 1;
 	end
 
 	CORD : begin
-	sprite_re = 1;
-	sprite_use_dst_reg = 1;
-	cord_instr = 1;
-	use_sprite_mem = 1;
+		sprite_re = 1;
+		sprite_use_dst_reg = 1;
+		cord_instr = 1;
+		use_sprite_mem = 1;
 	end
 
 	KEY : begin
-	IOR = 1;
+		IOR = 1;
 	end
 
 	TM : begin
-	sprite_we = 1;
+		sprite_we = 1;
 	end
-
-
   endcase
 end
 
