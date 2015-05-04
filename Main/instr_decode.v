@@ -3,7 +3,7 @@ module instr_decode(clk,rst_n,instr, alu_opcode, imm, regS_data_ID, regT_data_ID
 	  use_dst_reg, is_branch_instr, update_neg, update_carry, update_overflow, update_zero, sprite_addr, 
 	  sprite_action, sprite_use_imm, sprite_imm, /*sprite_reg_data,*/ sprite_re, sprite_we, sprite_use_dst_reg, IOR, dst_reg, hlt,
 	  PC_in, PC_out, dst_reg_WB, dst_reg_data_WB, we, branch_addr, branch_conditions, mem_alu_select, mem_we, mem_re, use_sprite_mem,
-	  return_PC_addr_reg, next_PC, hlt, re_hlt, addr_hlt);
+	  return_PC_addr_reg, next_PC, re_hlt, addr_hlt, regS_addr, regT_addr);
 
 
 input re_hlt;
@@ -47,7 +47,7 @@ output reg [21:0]return_PC_addr_reg; //return address for the jump and link inst
 
 reg reT, reS; //Reg read enable signals sent to the reg file
 reg sw_instr;
-wire [4:0]regS_addr, regT_addr; //to the reg file
+output [4:0]regS_addr, regT_addr; //to the reg file
 reg jr_instr, jal_instr;
  
 //reg_file iRF(.clk(clk),.regS(regS_addr),.regT(regT_addr),.p0(regS_data_ID),
@@ -133,6 +133,7 @@ assign PC_out = PC_in;
 
 reg cord_instr, rd_instr, mov_instr, movi_instr, act_ld_instr; //asserted for the CORD and RD gpu instructions for determining dst_reg bitfield
 
+// TODO -- this may be the wrong address
 assign dst_reg = (cord_instr == 1) ? instr[14:10]:
 		 (rd_instr == 1) ? instr[14:10]:
 		 instr[26:22];
