@@ -35,7 +35,7 @@ always @(posedge clk, negedge rst_n)
 		WB_use_dst_reg <= 0;
 		WB_dst_reg <= 0;
 	end 
-	else if (!stall & !hlt) begin
+	else if (!hlt) begin
 		WB_mem_ALU_select <= MEM_mem_ALU_select;
 		WB_PC <= MEM_PC;
 		WB_PC_out <= MEM_PC_out;
