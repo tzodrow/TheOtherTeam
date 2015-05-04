@@ -1,79 +1,77 @@
 module draw_map_tb();
-	
-	reg [31:0] stm_pixel;
-	reg [18:0] stm_base_addr;
-	reg stm_clk, stm_rst_n, stm_start, stm_mem_rdy, stm_frame_rdy;
-	wire [31:0] frame_data_mon;
-	wire [18:0] addr_mon;
-	wire done_mon, mem_re_mon, frame_we_mon;
-	
-	draw_map dm0(
-		.clk(stm_clk),
-		.rst_n(stm_rst_n),
-		.start(stm_start),
-		.done(done_mon),
-		.pixel(stm_pixel),
-		.mem_rdy(stm_mem_rdy),
-		.base_addr(stm_base_addr),
-		.mem_re(mem_re_mon),
-		.addr(addr_mon), // Same for both Map Memory and Frame buffer (Maybe)
-		.frame_rdy(stm_frame_rdy),
-		.frame_we(frame_we_mon),
-		.frame_data(frame_data_mon)
-		);
-	
-	always
-		#5 stm_clk <= ~stm_clk;
-		
-	initial begin
-		stm_rst_n = 0;
-		stm_clk = 0;
-		stm_start = 0;
-		stm_base_addr = 0;
-		stm_mem_rdy = 0;
-		stm_pixel = 0;
-		stm_mem_rdy = 0;
-		stm_frame_rdy = 0;
-		
-		repeat(2) @ (posedge stm_clk);
-		stm_rst_n = 1;
-		
-		@(posedge stm_clk);
-		stm_start = 1;
-		stm_base_addr = 0;
-		
-		@(posedge stm_clk);
-		stm_start = 0;
-		
-		while(addr_mon != (stm_base_addr + 307200 - 1)) begin
-			@(posedge stm_clk);
-			stm_mem_rdy = 1;
-			stm_pixel = stm_pixel + 8;
-			
-			@(negedge stm_clk);
-			if(!mem_re_mon) begin
-				$display("Memory was not read");
-				$stop();
-			end
-			
-			@(posedge stm_clk);
-			stm_mem_rdy = 0;
-			stm_frame_rdy = 1;
-			
-			@(negedge stm_clk);
-			if(!frame_we_mon) begin
-				$display("Frame was not written");
-				$stop();
-			end
-			if(stm_pixel != frame_data_mon) begin
-				$display("Frame did not receive the correct data");
-				$stop();
-			end
-			
-		end
 
-		$display("All done, finished correctly!");
-		$stop();
-	end
-	
+
+reg[80:0] i;
+
+reg clk, rst, start;
+wire done, frame_buf_we;
+wire[16:0] frame_buf_addr;
+wire[23:0] frame_buf_data;
+
+draw_map draw_map(clk, rst, start, done,
+               frame_buf_we, frame_buf_addr, frame_buf_data);
+
+initial begin
+	rst = 1;
+	clk_pulse;
+	rst = 0;
+	clk_pulse;
+	start = 1; 
+	clk_pulse;
+	start = 0;
+   clk_pulse500000;
+   $stop;
+end
+
+
+always@(done) begin
+	if(done) $stop;
+end
+
+task clk_pulse;
+begin
+clk = 0;
+#5;
+clk = 1;
+#5; 
+clk = 0; 
+#5;
+end
+endtask
+
+task clk_pulse10;
+begin
+for(i =0; i < 10; i = i + 1) begin
+	#5;
+	clk = 0;
+	#5;
+	clk = 1; 
+end
+end
+endtask
+
+task clk_pulse500;
+begin
+for(i =0; i < 500; i = i + 1) begin
+	#5;
+	clk = 0;
+	#5;
+	clk = 1; 
+end
+end
+endtask
+
+task clk_pulse500000;
+begin
+for(i =0; i < 500000; i = i + 1) begin
+	#5;
+	clk = 0;
+	#5;
+	clk = 1; 
+end
+end
+endtask
+
+
+
 endmodule
