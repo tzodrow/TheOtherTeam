@@ -1,12 +1,24 @@
-module MEM(clk, rst_n, mem_data, addr, re, we, ALU_result, sprite_data, sprite_ALU_select, mem_ALU_select, flag_ov, flag_neg, flag_zero, branch_condition, //Inputs
-		   cache_hit, /*mem_ALU_WB_select,*/ sprite_ALU_result, mem_result, branch_taken); //Outputs
-		   
-	input clk ,rst_n, sprite_ALU_select, mem_ALU_select, flag_ov, flag_neg, flag_zero, re, we;
-	input [2:0] branch_condition;
-	input [31:0] mem_data, sprite_data, ALU_result;
-	input [21:0] addr;
-	output cache_hit, /*mem_ALU_WB_select,*/ branch_taken;
-	output [31:0] sprite_ALU_result, mem_result;
+module MEM(
+	input clk, 
+	input rst_n, 
+	input [31:0] mem_data, 
+	input [21:0] addr, 
+	input re, 
+	input we, 
+	input [31:0] ALU_result, 
+	input [31:0] sprite_data, 
+	input sprite_ALU_select, 
+	input mem_ALU_select, 
+	input flag_ov, 
+	input flag_neg, 
+	input flag_zero, 
+	input [2:0] branch_condition, //Inputs
+	output cache_hit, 
+	/* output mem_ALU_WB_select,*/ 
+	output [31:0] sprite_ALU_result, 
+	output [31:0] mem_result, 
+	output branch_taken); //Outputs
+
 	
 	//branch opcodes
 	localparam NEQ = 3'b000;
@@ -29,12 +41,12 @@ module MEM(clk, rst_n, mem_data, addr, re, we, ALU_result, sprite_data, sprite_A
 	
 	
 	main_mem MAIN_MEM (
-  .clka(clk), // input clka
-  .ena((re | we)), // input ena
-  .wea(we), // input [0 : 0] wea
-  .addra(addr[4:0]), // input [4 : 0] addra
-  .dina(mem_data), // input [31 : 0] dina
-  .douta(mem_result) // output [31 : 0] douta
+	  .clka(clk), // input clka
+	  .ena((re | we)), // input ena
+	  .wea(we), // input [0 : 0] wea
+	  .addra(addr[4:0]), // input [4 : 0] addra
+	  .dina(mem_data), // input [31 : 0] dina
+	  .douta(mem_result) // output [31 : 0] douta
 	);
 	
 	assign sprite_ALU_result = (sprite_ALU_select) ?  sprite_data : ALU_result;

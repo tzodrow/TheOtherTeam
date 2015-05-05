@@ -37,6 +37,7 @@ module driver(
 	
 	// Tim's Testing Values
 	reg [31:0] val0, val1, val2, val3, val4, val5, val6, val7, val8, val9, val10, val11, val12, val13, val14, val15;
+	reg [31:0] val16, val17, val18, val19, val20, val21, val22, val23, val24, va25, val26, val127, val28, val29, val30, val31;
 	reg [3:0] we_counter_tim;
 	reg [2:0] hex_counter;
 	reg rst_hex_counter, dec_hex_counter;
@@ -68,9 +69,12 @@ module driver(
 	wire rst_n;
 	
 	reg re_hlt;
-	reg[7:0] instr_counter;
+	reg [7:0] instr_counter;
 	wire [21:0] instr_addr;
 	wire [21:0] EX_PC, EX_PC_out;
+	
+	// Register File
+	wire [31:0] regS_data, regT_data;
 	
 	//ID Stage Wire Declarations
 	wire ID_hlt, ID_use_imm, ID_use_dst_reg;
@@ -79,7 +83,7 @@ module driver(
 	wire[4:0] ID_dst_reg, ID_regS_addr, ID_regT_addr;
 	wire[16:0] ID_imm; 
 	wire[21:0] ID_PC, ID_PC_out, ID_branch_addr;
-	wire[31:0] ID_instr, ID_s_data, ID_t_data; 
+	wire[31:0] ID_instr;
 	wire ID_mem_alu_select, ID_mem_we, ID_mem_re, ID_use_sprite_mem;
 	wire[21:0] ID_return_PC_addr_reg;
 
@@ -119,7 +123,8 @@ module driver(
 	wire [31:0] reg_WB_data;
 	
 	assign stall = ((MEM_dst_reg == ID_regS_addr || MEM_dst_reg == ID_regT_addr) && (MEM_dst_reg != 5'h00)) ? 1 :
-		((EX_dst_reg == ID_regS_addr || EX_dst_reg == ID_regS_addr) && (EX_dst_reg != 5'h00)) ? 1 : 0;
+		((EX_dst_reg == ID_regS_addr || EX_dst_reg == ID_regT_addr) && (EX_dst_reg != 5'h00)) ? 1 : 
+		((WB_dst_reg == ID_regS_addr || WB_dst_reg == ID_regT_addr) && (WB_dst_reg != 5'h00)) ? 1 : 0;
 
 	assign instr_addr = {{14{1'b0}}, instr_counter};
 	assign dst_reg_EX_MEM_ascii = ({3'b000, MEM_dst_reg} + 8'h30);
@@ -141,13 +146,14 @@ module driver(
 		.br_pc(ID_branch_addr),
 		.taken(ID_is_branch),
 		.halt(hlt),
+		.stall(stall),
 		.nxt_pc(IF_next_PC),
 		.flush(flush));
 	
 	instr_fetch INSTR_FETCH(
 		.clk(clk), 
-		.rst_n(rst_n),
 		.hlt(hlt),
+		.stall(stall),
 		.addr(IF_PC), 
 		.instr(IF_instr));
 	
@@ -169,11 +175,11 @@ module driver(
 	instr_decode inst_decTest(
 		.clk(clk), 
 		.rst_n(rst_n), 
-		.instr(ID_instr), 
+		.instr(IF_instr), 
 		.alu_opcode(ID_alu_opcode), 
 		.imm(ID_imm), 
-		.regS_data_ID(ID_s_data), 
-		.regT_data_ID(ID_t_data), 
+		//.regS_data_ID(ID_s_data), 
+		//.regT_data_ID(ID_t_data), 
 		.use_imm(ID_use_imm),
 		.use_dst_reg(ID_use_dst_reg), 
 		.is_branch_instr(ID_is_branch), 
@@ -191,7 +197,7 @@ module driver(
 		.IOR(IOR), 
 		.dst_reg(ID_dst_reg), 
 		.hlt(hlt),
-		.PC_in(ID_PC), 
+		.PC_in(IF_PC), 
 		.PC_out(ID_PC_out), 
 		.dst_reg_WB(WB_dst_reg), 
 		.dst_reg_data_WB(reg_WB_data), 
@@ -211,6 +217,17 @@ module driver(
 		.EX_ov(EX_ov), 
 		.EX_neg(EX_neg), 
 		.EX_zero(EX_zero));
+		
+	reg_interface REG_FILE(
+	   .clk(clk),
+		.rst(rst),
+		.we(WB_use_dst_reg),
+		.regS_addr(ID_regS_addr),
+		.regT_addr(ID_regT_addr),
+		.regD_addr(WB_dst_reg),
+		.regD_data(reg_WB_data),
+		.regS_data(regS_data),
+		.regT_data(regT_data));
 
 	//////////////////
 	//PIPE: Instruction Decode - Execute
@@ -223,8 +240,8 @@ module driver(
 		.flush(flush), 
 		.ID_PC(ID_PC), 
 		.ID_PC_out(ID_PC_out), 
-		.ID_s_data(ID_s_data), 
-		.ID_t_data(ID_t_data), 
+		//.ID_s_data(ID_s_data), Remove These (Timing)
+		//.ID_t_data(ID_t_data), Remove These (Timing)
 		.ID_use_imm(ID_use_imm), 
 		.ID_use_dst_reg(ID_use_dst_reg), 
 		.ID_update_neg(ID_update_neg), 
@@ -248,8 +265,8 @@ module driver(
 		.ID_use_sprite_mem(ID_use_sprite_mem), 
 		.EX_PC(EX_PC), 
 		.EX_PC_out(EX_PC_out), 
-		.EX_s_data(EX_s_data), 
-		.EX_t_data(EX_t_data), 
+		//.EX_s_data(EX_s_data), Remove These (Timing)
+		//.EX_t_data(EX_t_data), Remove These (Timing)
 		.EX_use_imm(EX_use_imm), 
 		.EX_use_dst_reg(EX_use_dst_reg), 
 		.EX_update_neg(EX_update_neg), 
@@ -280,8 +297,8 @@ module driver(
 		.update_flag_ov(EX_update_ov), 
 		.update_flag_neg(EX_update_neg), 
 		.update_flag_zero(EX_update_zero),
-		.t_data(EX_t_data), 
-		.s_data(EX_s_data), 
+		.t_data(regT_data), 
+		.s_data(regS_data), 
 		.imm(EX_imm), 
 		.use_imm(EX_use_imm), 
 		.sprite_action(EX_sprite_action), 
@@ -379,7 +396,7 @@ module driver(
 		.MEM_mem_ALU_select(MEM_mem_ALU_select), 
 		.MEM_PC(MEM_PC), 
 		.MEM_PC_out(MEM_PC_out), 
-		.MEM_ALU_result(MEM_ALU_result),  //TODO: Check the datapath for MEM_ALU_result
+		.MEM_ALU_result(MEM_sprite_ALU_result),  //TODO: Check the datapath for MEM_ALU_result
 		.MEM_sprite_ALU_result(MEM_sprite_ALU_result), 
 		.MEM_instr(MEM_instr), 
 		.MEM_use_dst_reg(MEM_use_dst_reg), 
@@ -414,9 +431,7 @@ module driver(
 		else if (inc_PC)
 			instr_counter <= instr_counter + 1;
 		else if (dec_PC)
-			instr_counter <= instr_counter - 1;	
-		else if (ID_is_branch)
-			instr_counter <= ID_branch_addr[7:0];
+			instr_counter <= instr_counter - 1;
 	end
 	
     // RX Received Data Flop
@@ -451,8 +466,10 @@ module driver(
 			counter <= counter + 1;
 	end
 	
-	wire [31:0] value;
-	assign value = {stall, 3'b000, ID_dst_reg, 1'b0, ID_alu_opcode};
+	wire [31:0] value1, value2, value3;
+	assign value1 = IF_instr;
+	assign value2 = {IF_PC[11:0], 3'b0, stall, MEM_dst_reg[3:0], EX_dst_reg[3:0], ID_regS_addr[3:0], ID_regT_addr[3:0]};
+	assign value3 = reg_WB_data;
 	
 	always @ (posedge clk, posedge rst) begin
 		if(rst) begin
@@ -472,25 +489,57 @@ module driver(
 			val13 <= 0;
 			val14 <= 0;
 			val15 <= 0;
+			val16 <= 0;
+			val17 <= 0;
+			val18 <= 0;
+			val19 <= 0;
+			val20 <= 0;
+			val21 <= 0;
+			val22 <= 0;
+			val23 <= 0;
 		end
-		else if(!(IF_PC > NUM_INSTRUCTIONS)) begin
+		else if(~&counter) begin
 			case(counter)
-				5'h00 : val0 <= ID_alu_opcode;
-				5'h01 : val1 <= ID_alu_opcode;
-				5'h02 : val2 <= ID_alu_opcode;
-				5'h03 : val3 <= ID_alu_opcode;
-				5'h04 : val4 <= ID_alu_opcode;
-				5'h05 : val5 <= ID_alu_opcode;
-				5'h06 : val6 <= ID_alu_opcode;
-				5'h07 : val7 <= ID_alu_opcode;
-				5'h08 : val8 <= ID_alu_opcode;
-				5'h09 : val9 <= ID_alu_opcode;
-				5'h0a : val10 <= ID_alu_opcode;
-				5'h0b : val11 <= ID_alu_opcode;
-				5'h0c : val12 <= ID_alu_opcode;
-				5'h0d : val13 <= ID_alu_opcode;
-				5'h0e : val14 <= ID_alu_opcode;
-				5'h0f : val15 <= ID_alu_opcode;
+				5'h00 : begin
+					val0 <= value1;
+					val8 <= value2;
+					val16 <= value3;
+				end
+				5'h01 : begin
+					val1 <= value1;
+					val9 <= value2;
+					val17 <= value3;
+				end
+				5'h02 : begin
+					val2 <= value1;
+					val10 <= value2;
+					val18 <= value3;
+				end
+				5'h03 : begin
+					val3 <= value1;
+					val11 <= value2;
+					val19 <= value3;
+				end
+				5'h04 : begin
+					val4 <= value1;
+					val12 <= value2;
+					val20 <= value3;
+				end
+				5'h05 : begin
+					val5 <= value1;
+					val13 <= value2;
+					val21 <= value3;
+				end
+				5'h06 : begin
+					val6 <= value1;
+					val14 <= value2;
+					val22 <= value3;
+				end
+				5'h07 : begin
+					val7 <= value1;
+					val15 <= value2;
+					val23 <= value3;
+				end
 			endcase
 		end
 	end
@@ -516,12 +565,20 @@ module driver(
 			8'h0d : hex_in = val13 >> (hex_counter * 4);
 			8'h0e : hex_in = val14 >> (hex_counter * 4);
 			8'h0f : hex_in = val15 >> (hex_counter * 4);
+			8'h10 : hex_in = val16 >> (hex_counter * 4);
+			8'h11 : hex_in = val17 >> (hex_counter * 4);
+			8'h12 : hex_in = val18 >> (hex_counter * 4);
+			8'h13 : hex_in = val19 >> (hex_counter * 4);
+			8'h14 : hex_in = val20 >> (hex_counter * 4);
+			8'h15 : hex_in = val21 >> (hex_counter * 4);
+			8'h16 : hex_in = val22 >> (hex_counter * 4);
+			8'h17 : hex_in = val23 >> (hex_counter * 4);
 			default : hex_in = 4'hf;
 		endcase
 		
 	wire [31:0] reg_data;
 	wire [7:0] reg_ascii;
-	assign reg_data = ID_s_data >> (hex_counter * 4);
+	assign reg_data = regS_data >> (hex_counter * 4);
 	
 	
 	hex2ascii data_ascii(.hex(hex_in[3:0]), .ascii(ascii_out));
@@ -700,7 +757,7 @@ module driver(
 			
 			SEND_SPACE : begin
 				if(tbr) begin
-					if(instr_counter <= 4'b1111)
+					if(instr_counter >= 8'h17)
 						nxt_state = RECEIVE_WAIT;
 					else begin
 						nxt_state = SEND_LONG_HEX;

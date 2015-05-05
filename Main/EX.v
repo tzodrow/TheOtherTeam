@@ -1,5 +1,5 @@
 module EX(
-        input clk,
+	input clk,
 	input rst_n,
 	input[2:0] alu_opcode,
 	input update_flag_ov,
@@ -20,17 +20,16 @@ module EX(
 	output[31:0] sprite_data,
 	output reg flag_ov,
 	output reg flag_neg,
-	output reg flag_zero
-	);
+	output reg flag_zero);
 	
 	localparam ALU_OP_ADD = 3'b000;
-   	localparam ALU_OP_SUB = 3'b001;
+   localparam ALU_OP_SUB = 3'b001;
   	localparam ALU_OP_AND = 3'b010;
   	localparam ALU_OP_OR = 3'b011;
-   	localparam ALU_OP_NOR = 3'b100;
-   	localparam ALU_OP_SLL = 3'b101;
-   	localparam ALU_OP_SRL = 3'b110;
-   	localparam ALU_OP_SRA = 3'b111;
+   localparam ALU_OP_NOR = 3'b100;
+   localparam ALU_OP_SLL = 3'b101;
+   localparam ALU_OP_SRL = 3'b110;
+   localparam ALU_OP_SRA = 3'b111;
 	
 	wire[7:0] sprite_write_data; 
 	wire[31:0] src0, src1, src1Not, mathResult, shiftInter; 
@@ -50,7 +49,7 @@ module EX(
 						                  32'b0;   
 
     //determines if overflow occurred based on the MSBs of src0 and src1 and the results of the intermediate math op above
-	assign	ov		=	(alu_opcode == ALU_OP_ADD) ? 
+	assign ov =	 (alu_opcode == ALU_OP_ADD) ? 
 	                (((src0[31] == src1[31]) && (src0[31] != mathResult[31])))	? 
 	                      1'b1 : 1'b0: 
 	                (((src1Not[31] == src0[31]) && (src1Not[31] != mathResult[31])))	?

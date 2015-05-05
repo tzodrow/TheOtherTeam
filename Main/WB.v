@@ -1,9 +1,10 @@
-module WB(clk, rst_n, mem_result, sprite_ALU_result, mem_ALU_select, //Inputs
-		  reg_WB_data); //Outputs
-
-	input clk, rst_n, mem_ALU_select;
-	input [31:0] mem_result, sprite_ALU_result;
-	output [31:0] reg_WB_data;
+module WB(
+	input clk, 
+	input rst_n, 
+	input [31:0] mem_result, 
+	input [31:0] sprite_ALU_result, 
+	input mem_ALU_select,
+	output reg_WB_data);
 		  
 	assign reg_WB_data = (mem_ALU_select) ?  mem_result : sprite_ALU_result;
 
