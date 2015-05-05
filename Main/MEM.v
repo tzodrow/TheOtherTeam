@@ -28,7 +28,7 @@ module MEM(clk, rst_n, mem_data, addr, re, we, ALU_result, sprite_data, sprite_A
 					 .result(mem_result),.cache_hit(cache_hit)); //Outputs*/
 	
 	
-	main_mem3 your_instance_name (
+	main_mem MAIN_MEM (
   .clka(clk), // input clka
   .ena((re | we)), // input ena
   .wea(we), // input [0 : 0] wea

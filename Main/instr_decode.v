@@ -50,14 +50,14 @@ reg sw_instr;
 output [4:0]regS_addr, regT_addr; //to the reg file
 reg jr_instr, jal_instr;
 
-// Check for R0, if reg_in == 5'h00
+// Hold R0 at 0
 wire [31:0] data_in;
-assign data_in = 0;
+assign data_in = (dst_reg_WB == 5'h00) ? 0 : dst_reg_data_WB;
 
 //reg A is port S, B is port T 
 register_file_S regS (
   .clka(clk), // input clka
-  .ena(reS | we | re_hlt | hlt), // input ena
+  .ena(1'b1), // input ena
   .wea(1'b0), // input [0 : 0] wea
   .addra(regS_addr), // input [4 : 0] addra
   .dina(32'b0), // input [31 : 0] dina
@@ -65,7 +65,7 @@ register_file_S regS (
   .clkb(clk),// input clkb
   .web(we), // input [0 : 0] web
   .addrb(dst_reg_WB), // input [4 : 0] addrb
-  .dinb(dst_reg_data_WB), // input [31 : 0] dinb
+  .dinb(data_in), // input [31 : 0] dinb
   .doutb() // output [31 : 0] doutb
 );
 
@@ -76,7 +76,7 @@ register_file_T regT (
   .clka(clk), // input clka
   .wea(we), // input [0 : 0] wea
   .addra(dst_reg_WB), // input [4 : 0] addra
-  .dina(dst_reg_data_WB), // input [31 : 0] dina
+  .dina(data_in), // input [31 : 0] dina
   .douta(),//(32'b0), // output [31 : 0] douta
   .clkb(clk),//(clk), // input clkb
   .enb(reT | we), // input enb

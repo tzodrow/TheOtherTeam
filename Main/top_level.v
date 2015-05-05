@@ -71,9 +71,7 @@ module top_level(
 						 .rda(rda),
 						 .tbr(tbr),
 						 .ioaddr(ioaddr),
-						 .databus(databus),
-						 .data2output(data2output),
-						 .data2output_2(data2output_2)
+						 .databus(databus)
 					 );
 					 
 	spu spu(.clk_100mhz(clk_100mhz),  

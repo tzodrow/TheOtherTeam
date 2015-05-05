@@ -36,10 +36,11 @@ module driver(
 	reg rst_instr_addr;
 	
 	// Tim's Testing Values
-	reg [31:0] val0, val1, val2, val3, val4, val5;
+	reg [31:0] val0, val1, val2, val3, val4, val5, val6, val7, val8, val9, val10, val11, val12, val13, val14, val15;
 	reg [3:0] we_counter_tim;
 	reg [2:0] hex_counter;
 	reg rst_hex_counter, dec_hex_counter;
+	reg [3:0] counter;
 	
 	localparam NUM_INSTRUCTIONS = 24'h000006;
 	
@@ -57,6 +58,8 @@ module driver(
 	localparam PRINT_PC = 4'b1000;
 	localparam SEND_LONG_HEX = 4'b1001;
 	localparam SEND_SPACE = 4'b1010;
+	localparam SEND_REG_FILE = 4'b1011;
+	localparam SEND_REG_SPACE = 4'b1100;
 
 	
 	wire[31:0] IF_instr;
@@ -115,9 +118,8 @@ module driver(
 	wire [31:0] WB_dst_reg_data_WB;
 	wire [31:0] reg_WB_data;
 	
-	assign stall = 	(MEM_dst_reg == 5'h00 || EX_dst_reg == 5'h00) ? 0 :
-		(MEM_dst_reg == ID_regS_addr || MEM_dst_reg == ID_regT_addr) ? 1 :
-		(EX_dst_reg == ID_regS_addr || EX_dst_reg == ID_regS_addr) ? 1 : 0;
+	assign stall = ((MEM_dst_reg == ID_regS_addr || MEM_dst_reg == ID_regT_addr) && (MEM_dst_reg != 5'h00)) ? 1 :
+		((EX_dst_reg == ID_regS_addr || EX_dst_reg == ID_regS_addr) && (EX_dst_reg != 5'h00)) ? 1 : 0;
 
 	assign instr_addr = {{14{1'b0}}, instr_counter};
 	assign dst_reg_EX_MEM_ascii = ({3'b000, MEM_dst_reg} + 8'h30);
@@ -137,12 +139,12 @@ module driver(
 	PC_MUX PC_MUX(
 		.pc(IF_PC),
 		.br_pc(ID_branch_addr),
-		.taken(is_branch_instr),
+		.taken(ID_is_branch),
 		.halt(hlt),
 		.nxt_pc(IF_next_PC),
 		.flush(flush));
 	
-	instr_fetch instr_fetch(
+	instr_fetch INSTR_FETCH(
 		.clk(clk), 
 		.rst_n(rst_n),
 		.hlt(hlt),
@@ -443,6 +445,16 @@ module driver(
 	end
 	
 	always @ (posedge clk, posedge rst) begin
+		if(rst)
+			counter <= 0;
+		else if (~(&counter))
+			counter <= counter + 1;
+	end
+	
+	wire [31:0] value;
+	assign value = {stall, 3'b000, ID_dst_reg, 1'b0, ID_alu_opcode};
+	
+	always @ (posedge clk, posedge rst) begin
 		if(rst) begin
 			val0 <= 0;
 			val1 <= 0;
@@ -450,15 +462,35 @@ module driver(
 			val3 <= 0;
 			val4 <= 0;
 			val5 <= 0;
+			val6 <= 0;
+			val7 <= 0;
+			val8 <= 0;
+			val9 <= 0;
+			val10 <= 0;
+			val11 <= 0;
+			val12 <= 0;
+			val13 <= 0;
+			val14 <= 0;
+			val15 <= 0;
 		end
 		else if(!(IF_PC > NUM_INSTRUCTIONS)) begin
-			case(IF_PC[4:0])
-				5'h00 : val0 <= IF_PC;
-				5'h01 : val1 <= IF_PC;
-				5'h02 : val2 <= IF_PC;
-				5'h03 : val3 <= IF_PC;
-				5'h04 : val4 <= IF_PC;
-				5'h05 : val5 <= IF_PC;
+			case(counter)
+				5'h00 : val0 <= ID_alu_opcode;
+				5'h01 : val1 <= ID_alu_opcode;
+				5'h02 : val2 <= ID_alu_opcode;
+				5'h03 : val3 <= ID_alu_opcode;
+				5'h04 : val4 <= ID_alu_opcode;
+				5'h05 : val5 <= ID_alu_opcode;
+				5'h06 : val6 <= ID_alu_opcode;
+				5'h07 : val7 <= ID_alu_opcode;
+				5'h08 : val8 <= ID_alu_opcode;
+				5'h09 : val9 <= ID_alu_opcode;
+				5'h0a : val10 <= ID_alu_opcode;
+				5'h0b : val11 <= ID_alu_opcode;
+				5'h0c : val12 <= ID_alu_opcode;
+				5'h0d : val13 <= ID_alu_opcode;
+				5'h0e : val14 <= ID_alu_opcode;
+				5'h0f : val15 <= ID_alu_opcode;
 			endcase
 		end
 	end
@@ -474,12 +506,27 @@ module driver(
 			8'h03 : hex_in = val3 >> (hex_counter * 4);
 			8'h04 : hex_in = val4 >> (hex_counter * 4);
 			8'h05 : hex_in = val5 >> (hex_counter * 4);
+			8'h06 : hex_in = val6 >> (hex_counter * 4);
+			8'h07 : hex_in = val7 >> (hex_counter * 4);
+			8'h08 : hex_in = val8 >> (hex_counter * 4);
+			8'h09 : hex_in = val9 >> (hex_counter * 4);
+			8'h0a : hex_in = val10 >> (hex_counter * 4);
+			8'h0b : hex_in = val11 >> (hex_counter * 4);
+			8'h0c : hex_in = val12 >> (hex_counter * 4);
+			8'h0d : hex_in = val13 >> (hex_counter * 4);
+			8'h0e : hex_in = val14 >> (hex_counter * 4);
+			8'h0f : hex_in = val15 >> (hex_counter * 4);
 			default : hex_in = 4'hf;
 		endcase
+		
+	wire [31:0] reg_data;
+	wire [7:0] reg_ascii;
+	assign reg_data = ID_s_data >> (hex_counter * 4);
 	
 	
 	hex2ascii data_ascii(.hex(hex_in[3:0]), .ascii(ascii_out));
 	hex2ascii instr_ascii(.hex(instr_counter[3:0]), .ascii(instr_counter_ascii));
+	hex2ascii reg_file_ascii(.hex(reg_data[3:0]), .ascii(reg_ascii));
 
 	///////////////////
     // State Machine //
@@ -561,6 +608,13 @@ module driver(
 							ioaddr = 2'b00;
 							rst_hex_counter = 1;
 							rst_instr_addr = 1;
+						end
+						else if(databus == 8'h33) begin
+							nxt_state = SEND_REG_FILE;
+							ioaddr = 2'b00;
+							rst_hex_counter = 1;
+							rst_instr_addr = 1;
+							re_hlt = 1;
 						end
 						else 
 							nxt_state = RECEIVE_WAIT;
@@ -646,7 +700,7 @@ module driver(
 			
 			SEND_SPACE : begin
 				if(tbr) begin
-					if(instr_counter == 3'b101)
+					if(instr_counter <= 4'b1111)
 						nxt_state = RECEIVE_WAIT;
 					else begin
 						nxt_state = SEND_LONG_HEX;
@@ -660,6 +714,43 @@ module driver(
 				end
 				else
 					nxt_state = SEND_SPACE;
+			end
+			
+			SEND_REG_FILE : begin
+				re_hlt = 1;
+				if(tbr) begin
+					if(hex_counter == 3'b000)
+						nxt_state = SEND_REG_SPACE;
+					else begin
+						nxt_state = SEND_REG_FILE;
+						dec_hex_counter = 1;
+					end
+					ioaddr = 2'b00;
+					iorw = 0;
+					data_out = reg_ascii;
+					sel = 1;
+				end
+				else
+					nxt_state = SEND_REG_FILE;
+			end
+			
+			SEND_REG_SPACE : begin
+				re_hlt = 1;
+				if(tbr) begin
+					if(instr_counter == 5'h1f)
+						nxt_state = RECEIVE_WAIT;
+					else begin
+						nxt_state = SEND_REG_FILE;
+						inc_PC = 1;
+						rst_hex_counter = 1;
+					end
+					ioaddr = 2'b00;
+					iorw = 0;
+					data_out = 8'h20;
+					sel = 1;
+				end
+				else
+					nxt_state = SEND_REG_SPACE;
 			end
 			
 		endcase

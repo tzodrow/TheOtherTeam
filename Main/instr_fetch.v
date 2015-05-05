@@ -12,7 +12,7 @@ module instr_fetch(
 	
 	assign instr = (hlt) ? HALT : mem_instr;
 	
-	instr_mem16 your_instance_name (
+	instr_mem INSTR_MEM (
 		.clka(clk), // input clka
 		.addra(addr[6:0]), // input [6 : 0] addra
 		.douta(mem_instr) // output [31 : 0] douta

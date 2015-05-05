@@ -122,7 +122,7 @@ module spu(clk_100mhz,  rst, pixel_r, pixel_g, pixel_b, hsync, vsync, blank, clk
 		wire[7:0] sprite_data_address; 
 		wire[63:0] sprite_data_write_data, sprite_data_read_data;
 		
-		sprite_data_RAM test_sprite_data_RAM (
+		sprite_data_RAM SPRITE_DATA_RAM (
 		  .clka(clk_100mhz_buf), // input clka
 		  .wea(sprite_data_we), // input [0 : 0] wea
 		  .addra(sprite_data_address[2:0]), // input [1 : 0] addra
@@ -131,16 +131,16 @@ module spu(clk_100mhz,  rst, pixel_r, pixel_g, pixel_b, hsync, vsync, blank, clk
 		);
 		
 		
-		draw_sprite draw_sprite(.clk(clk_100mhz_buf), .rst_n(dvi_rst), .write_en(sprite_frame_we), .frame_addr(sprite_frame_buf_addr), .frame_data(sprite_frame_buf_data), 
+		draw_sprite DRAW_SPRITE(.clk(clk_100mhz_buf), .rst_n(dvi_rst), .write_en(sprite_frame_we), .frame_addr(sprite_frame_buf_addr), .frame_data(sprite_frame_buf_data), 
 						.frame_write_valid(1'b1), .rom_addr(rom_addr), .read_en(sprite_read_en), .rom_data_valid(1'b1), .done(draw_sprite_done), 
 						.coordinates(coordinates), .img_sel(img_sel), .start(draw_sprite_start), .rom_data(rom_data));
 						
-		move_logic move_logic(.clk(clk_100mhz_buf), .rst_n(dvi_rst), .start(move_logic_start), .done(move_logic_done), .sprite_data_read_data(sprite_data_read_data), .draw_sprite_rdy(draw_sprite_done),   
+		move_logic MOVE_LOGIC(.clk(clk_100mhz_buf), .rst_n(dvi_rst), .start(move_logic_start), .done(move_logic_done), .sprite_data_read_data(sprite_data_read_data), .draw_sprite_rdy(draw_sprite_done),   
 						.draw_sprite_start(draw_sprite_start), .draw_sprite_image(img_sel), .draw_sprite_coordinates(coordinates),
 						.sprite_data_we(sprite_data_we), .sprite_data_address(sprite_data_address), .sprite_data_write_data(sprite_data_write_data));
 		
 		//Image ROM
-		IMAGE_ROM sprite_image(
+		IMAGE_ROM SPRITE_IMAGE_ROM(
 			.clka(~clk_100mhz_buf),
 			.addra(rom_addr),  // input [13 : 0] addra
 			.douta(rom_data)
@@ -153,7 +153,7 @@ module spu(clk_100mhz,  rst, pixel_r, pixel_g, pixel_b, hsync, vsync, blank, clk
 		
 		assign data2output = fifo_out;
 		
-		ROM FRAME_BUFFER (
+		FRAME_BUFFER FRAME_BUFFER (
 		  .clka(clk_100mhz_buf), // input clka
 		  .wea(frame_we), // input [0 : 0] wea
 		  .addra(frame_buf_addr), // input [16 : 0] addra
@@ -194,7 +194,7 @@ module spu(clk_100mhz,  rst, pixel_r, pixel_g, pixel_b, hsync, vsync, blank, clk
 	 vga_logic vga_logic(clk_25mhz, rst|~locked_dcm, blank, comp_sync, hsync, vsync, pixel_x, pixel_y, fifo_out, fifo_rd_en, fifo_empty, pixel_r, pixel_g, pixel_b);
 	 
 	 //writes at 100 MHz, reads at 25 MHz
-	 fifo fifo(		.rst(rst|~locked_dcm), // input rst
+	 FIFO FIFO(		.rst(rst|~locked_dcm), // input rst
 						.wr_clk(clk_100mhz_buf), // input wr_clk
 						.rd_clk(clk_25mhz), // input rd_clk
 						.din(fifo_in), // input [23 : 0] din

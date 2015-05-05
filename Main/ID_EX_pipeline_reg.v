@@ -69,7 +69,7 @@ always @(posedge clk, negedge rst_n)
 	 EX_mem_re <= 0;
 	 EX_use_sprite_mem <= 0;
 	end
-	else if (flush) begin
+	else if (flush | stall) begin
 	 EX_PC <= 0;
  	 EX_PC_out <= 0;
  	 EX_s_data <= 0;
@@ -96,7 +96,7 @@ always @(posedge clk, negedge rst_n)
 	 EX_mem_re <= 0;
 	 EX_use_sprite_mem <= 0;
 	end
-	else if (!stall & !hlt) begin
+	else if (!hlt) begin
 	 EX_PC <= ID_PC;
  	 EX_PC_out <= ID_PC_out;
  	 EX_s_data <= ID_s_data;

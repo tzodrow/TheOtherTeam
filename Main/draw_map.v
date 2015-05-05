@@ -40,7 +40,7 @@ module draw_map(input clk, input rst, input start, output done,
 	     endcase
 	  end
 	  
-		ACTUALLY_ROM MAP_MEMORY(
+		map_memory MAP_MEMORY(
 		  .clka(~clk), // 100 MHz clock, reading on negedge so data is available to write to fifo before posedge of clock
 		  .addra(addr),	  // input [12 : 0] addra
 		  .douta(frame_buf_data) // output [23 : 0] douta
