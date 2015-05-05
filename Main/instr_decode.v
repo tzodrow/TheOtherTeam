@@ -261,7 +261,7 @@ always @(*) begin
 
 	LW : begin
  	reS = 1;
-   mem_re = 1;
+   	mem_re = 1;
  	mem_alu_select = 1;
 	use_dst_reg = 1;
 	end	
@@ -276,6 +276,7 @@ always @(*) begin
 
 	MOV : begin
  	reS = 1;
+ 	reT = 1;
 	use_dst_reg = 1;
 	mov_instr = 1;
 	end	
