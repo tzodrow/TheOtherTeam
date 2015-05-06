@@ -47,7 +47,11 @@ module driver(
 	localparam SEND_4 = 4'b0110;
 	localparam NEXT_LINE = 4'b0111;
 	localparam PRINT_PC = 4'b1000;
-
+	localparam PRINT_HLT1 = 4'b1001;
+	localparam PRINT_HLT2 = 4'b1010;
+	localparam PRINT_HLT3 = 4'b1011;
+	localparam PRINT_HLT4 = 4'b1100;
+	
 	reg sel,wrt_rx_data;
 	wire[31:0] IF_instr;
 	wire[21:0] IF_PC, IF_next_PC, pc;
@@ -74,7 +78,8 @@ module driver(
 	wire[7:0] ID_sprite_addr;
 	wire[13:0] ID_sprite_imm;
 
-	wire ID_hlt, EX_hlt, MEM_hlt, WB_hlt;
+	wire ID_hlt;
+	reg EX_hlt, MEM_hlt, WB_hlt;
 
 	reg[4:0]hlt_mem_addr;
 	reg inc_mem_addr;
@@ -160,6 +165,17 @@ module driver(
 	assign mem_ascii = (MEM_mem_result[7:0] + 8'h30); //convert to ascii
 	// Testing //
 
+	wire [7:0]mem_hlt_ascii;
+	assign mem_hlt_ascii = ({7'h00, MEM_hlt} + 8'h30);
+	
+	wire [7:0]id_hlt_ascii;
+	assign id_hlt_ascii = ({7'h00, ID_hlt} + 8'h30);
+	
+	wire [7:0]ex_hlt_ascii;
+	assign ex_hlt_ascii = ({7'h00, EX_hlt} + 8'h30);
+	
+	wire [7:0]wb_hlt_ascii;
+	assign wb_hlt_ascii = ({7'h00, WB_hlt} + 8'h30);
     ////////////////////////////////////////
     // Registers used for control signals //
     ////////////////////////////////////////
@@ -258,7 +274,7 @@ module driver(
 			.clk(clk), 
 			.rst_n(rst_n), 
 			.stall(stall), 
-			.ID_hlt(ID_hlt), 
+			.hlt(EX_hlt), 
 			.flush(flush), 
 			.ID_PC(ID_PC), 
 			.ID_PC_out(ID_PC_out), 
@@ -305,8 +321,9 @@ module driver(
 			.EX_mem_alu_select(EX_mem_ALU_select), 
 			.EX_mem_we(EX_mem_we), 
 			.EX_mem_re(EX_mem_re), 
-			.EX_use_sprite_mem(EX_use_sprite_mem), 
-			.EX_hlt(EX_hlt));
+			.EX_use_sprite_mem(EX_use_sprite_mem)); 
+			//.EX_hlt(EX_hlt)
+			
 
 
 	//EX Module Declaration
@@ -344,7 +361,7 @@ module driver(
 	EX_MEM_pipeline_reg ex_mem_pipe_Test(
 			.clk(clk), 
 			.rst_n(rst_n), 
-			.EX_hlt(EX_hlt), 
+			.hlt(MEM_hlt), 
 			.stall(stall), 
 			.flush(flush), 
 			.EX_ov(EX_ov), 
@@ -381,8 +398,8 @@ module driver(
 			.MEM_use_sprite_mem(MEM_use_sprite_mem), 
 			.MEM_dst_reg(MEM_dst_reg), 
 			.MEM_ALU_result(MEM_ALU_result), 
-			.MEM_t_data(MEM_t_data), 
-			.MEM_hlt(MEM_hlt));
+			.MEM_t_data(MEM_t_data)); 
+			//.MEM_hlt(MEM_hlt)
 
 	//////////////////
 	//Memory
@@ -412,8 +429,7 @@ module driver(
 	     	.hlt_mem_addr(hlt_mem_addr)); //Outputs
 
 
-wire [7:0]mem_hlt_ascii;
-assign mem_hlt_ascii = ({7'h00, MEM_hlt} + 8'h30);
+
 
 	//NOTE: MEM_ALU_result may not be hooked up properly
 	
@@ -424,7 +440,7 @@ assign mem_hlt_ascii = ({7'h00, MEM_hlt} + 8'h30);
 	MEM_WB_pipeline_reg mem_wb_pipe_Test(
 			.clk(clk), 
 			.rst_n(rst_n), 
-			.MEM_hlt(MEM_hlt), 
+			.hlt(WB_hlt), 
 			.stall(stall), 
 			.flush(flush), 
 			.MEM_mem_ALU_select(MEM_mem_ALU_select), 
@@ -443,8 +459,8 @@ assign mem_hlt_ascii = ({7'h00, MEM_hlt} + 8'h30);
 			.WB_sprite_ALU_result(WB_sprite_ALU_result), 
 			.WB_instr(WB_instr), 
 			.WB_use_dst_reg(WB_use_dst_reg), 
-			.WB_dst_reg(WB_dst_reg), 
-			.WB_hlt(WB_hlt));  //Outputs
+			.WB_dst_reg(WB_dst_reg));
+			//.WB_hlt(WB_hlt));  //Outputs
 	
 	//////////////////
 	//Writeback
@@ -480,8 +496,21 @@ assign mem_hlt_ascii = ({7'h00, MEM_hlt} + 8'h30);
 			hlt_mem_addr <= 5'h00;
 		else if (inc_mem_addr)
 			hlt_mem_addr <= hlt_mem_addr + 1;
-
 	end
+	
+	always @(posedge clk, posedge rst)
+		if(rst) begin
+			EX_hlt <= 0;
+			MEM_hlt <= 0;
+			WB_hlt <= 0;
+		end
+		else begin
+			EX_hlt <= ID_hlt;
+			MEM_hlt <= EX_hlt;
+			WB_hlt <= MEM_hlt;
+		end
+		
+	
     // Tri-state buffer used to receive and send data via the databuse
     // Sel high = output, Sel low = input
 	assign databus = sel ? data_out : 8'bz;
@@ -631,7 +660,7 @@ assign mem_hlt_ascii = ({7'h00, MEM_hlt} + 8'h30);
 					
 			PRINT_MEMORY: begin
 				if(hlt_mem_addr >= 5'h0a)
-					nxt_state = PRINT_PC;
+					nxt_state = PRINT_HLT1;
 				else if(tbr) begin
 					inc_mem_addr = 1;
 					nxt_state = NEXT_LINE;					
@@ -694,6 +723,57 @@ assign mem_hlt_ascii = ({7'h00, MEM_hlt} + 8'h30);
 				end
 			end
 			
+			PRINT_HLT1: begin
+				if(tbr) begin
+					nxt_state = PRINT_HLT2;					
+					ioaddr = 2'b00;
+					iorw = 0;
+					data_out = id_hlt_ascii;
+					sel = 1;
+				end
+				else begin
+					nxt_state = PRINT_HLT1;
+				end
+			end
+			
+			PRINT_HLT2: begin
+				if(tbr) begin
+					nxt_state = PRINT_HLT3;					
+					ioaddr = 2'b00;
+					iorw = 0;
+					data_out = ex_hlt_ascii;
+					sel = 1;
+				end
+				else begin
+					nxt_state = PRINT_HLT2;
+				end
+			end
+			
+			PRINT_HLT3: begin
+				if(tbr) begin
+					nxt_state = PRINT_HLT4;					
+					ioaddr = 2'b00;
+					iorw = 0;
+					data_out = mem_hlt_ascii;
+					sel = 1;
+				end
+				else begin
+					nxt_state = PRINT_HLT3;
+				end
+			end
+			
+			PRINT_HLT4: begin
+				if(tbr) begin
+					nxt_state = RECEIVE_WAIT;					
+					ioaddr = 2'b00;
+					iorw = 0;
+					data_out = wb_hlt_ascii;
+					sel = 1;
+				end
+				else begin
+					nxt_state = PRINT_HLT4;
+				end
+			end
 		endcase
 	end		
 endmodule
