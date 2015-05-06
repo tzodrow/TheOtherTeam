@@ -411,6 +411,10 @@ module driver(
 	     	.hlt(MEM_hlt), 
 	     	.hlt_mem_addr(hlt_mem_addr)); //Outputs
 
+
+wire [7:0]mem_hlt_ascii;
+assign mem_hlt_ascii = ({7'h00, MEM_hlt} + 8'h30);
+
 	//NOTE: MEM_ALU_result may not be hooked up properly
 	
 	//////////////////
@@ -493,7 +497,7 @@ module driver(
     // State Flop
 	always @ (posedge clk, posedge rst) begin
 		if(rst)
-			state <= 2'b00;
+			state <= 4'b0000;
 		else
 			state <= nxt_state;
 	end
@@ -627,7 +631,7 @@ module driver(
 					
 			PRINT_MEMORY: begin
 				if(hlt_mem_addr >= 5'h0a)
-					nxt_state = RECEIVE_WAIT;
+					nxt_state = PRINT_PC;
 				else if(tbr) begin
 					inc_mem_addr = 1;
 					nxt_state = NEXT_LINE;					
@@ -682,7 +686,7 @@ module driver(
 					nxt_state = RECEIVE_WAIT;					
 					ioaddr = 2'b00;
 					iorw = 0;
-					data_out = 8'h20;//ascii_PC;
+					data_out = mem_hlt_ascii;
 					sel = 1;
 				end
 				else begin
