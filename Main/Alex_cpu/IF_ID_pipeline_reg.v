@@ -1,11 +1,22 @@
-module IF_ID_pipeline_reg(clk, rst_n, hlt, stall, flush, IF_instr, ID_instr, IF_PC, ID_PC);
+module IF_ID_pipeline_reg(
+		input clk, 
+		input rst_n, 
+		input hlt, 
+		input stall, 
+		input flush, 
+		input [31:0] IF_instr, 
+		output reg [31:0] ID_instr, 
+		input [21:0] IF_PC, 
+		output reg [21:0] ID_PC);
 
+/*
 input clk, rst_n, stall, flush, hlt;
 input [31:0]IF_instr;
 input [21:0]IF_PC;
 
 output reg [31:0]ID_instr;
 output reg [21:0]ID_PC;
+*/
 
 always @(posedge clk, negedge rst_n)
 	if (!rst_n)
