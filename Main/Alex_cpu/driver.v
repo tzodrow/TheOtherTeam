@@ -248,7 +248,7 @@ MEM mem_Test(.clk(clk), .rst_n(rst_n), .mem_data(MEM_t_data), .addr(EX_ALU_resul
 	     .sprite_ALU_select(MEM_sprite_ALU_select), .mem_ALU_select(mem_ALU_select), .flag_ov(flag_ov), 
 	     .flag_neg(MEM_flag_neg), .flag_zero(MEM_flag_zero), .branch_condition(MEM_branch_cond), //Inputs
              .cache_hit(cache_hit), /*.mem_ALU_WB_select(MEM_mem_ALU_select),*/ .sprite_ALU_result(MEM_sprite_ALU_result),
-	     .mem_result(MEM_mem_result), .branch_taken(MEM_branch_taken), .hlt(hlt), .hlt_mem_addr(hlt_mem_addr)); //Outputs
+	     .mem_result(MEM_mem_result), .branch_taken(MEM_branch_taken), .hlt(MEM_hlt), .hlt_mem_addr(hlt_mem_addr)); //Outputs
 
 //NOTE: MEM_ALU_result may not be hooked up properly
 
