@@ -418,29 +418,29 @@ module driver(
 	//////////////////
 
 	MEM_WB_pipeline_reg mem_wb_pipe_Test(
-			clk, 
-			rst_n, 
-			MEM_hlt, 
-			stall, 
-			flush, 
-			MEM_mem_ALU_select, 
-			MEM_PC, 
-			MEM_PC_out,
-			MEM_ALU_result, 
-			MEM_sprite_ALU_result,
-			MEM_instr,
-			MEM_use_dst_reg, 
-			MEM_dst_reg, 
-			MEM_mem_result, //Inputs
-			WB_mem_ALU_select, 
-			WB_PC, 
-			WB_PC_out, 
-			WB_mem_result, 
-			WB_sprite_ALU_result, 
-			WB_instr, 
-			WB_use_dst_reg, 
-			WB_dst_reg, 
-			WB_hlt);  //Outputs
+			.clk(clk), 
+			.rst_n(rst_n), 
+			.MEM_hlt(MEM_hlt), 
+			.stall(stall), 
+			.flush(flush), 
+			.MEM_mem_ALU_select(MEM_mem_ALU_select), 
+			.MEM_PC(MEM_PC), 
+			.MEM_PC_out(MEM_PC_out),
+			.MEM_ALU_result(MEM_ALU_result), 
+			.MEM_sprite_ALU_result(MEM_sprite_ALU_result),
+			.MEM_instr(MEM_instr),
+			.MEM_use_dst_reg(MEM_use_dst_reg), 
+			.MEM_dst_reg(MEM_dst_reg), 
+			.MEM_mem_result(MEM_mem_result), //Inputs
+			.WB_mem_ALU_select(WB_mem_ALU_select), 
+			.WB_PC(WB_PC), 
+			.WB_PC_out(WB_PC_out), 
+			.WB_mem_result(WB_mem_result), 
+			.WB_sprite_ALU_result(WB_sprite_ALU_result), 
+			.WB_instr(WB_instr), 
+			.WB_use_dst_reg(WB_use_dst_reg), 
+			.WB_dst_reg(WB_dst_reg), 
+			.WB_hlt(WB_hlt));  //Outputs
 	
 	//////////////////
 	//Writeback
