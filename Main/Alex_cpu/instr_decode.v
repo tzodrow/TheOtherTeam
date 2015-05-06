@@ -58,7 +58,7 @@ reg jal_instr;
 //reg A is port S, B is port T 
 register_file_S regS (
   .clka(clk), // input clka
-  .ena((reS | we | re_hlt | hlt) & ~stall), // input ena
+  .ena((reS | we | re_hlt | hlt)),// & ~stall), // input ena
   .wea(1'b0), // input [0 : 0] wea
   .addra(regS_addr), // input [4 : 0] addra
   .dina(32'd9), // input [31 : 0] dina
@@ -78,7 +78,7 @@ register_file_T regT (
   .dina(dst_reg_data_WB), // input [31 : 0] dina
   .douta(),//(32'b0), // output [31 : 0] douta
   .clkb(clk),//(clk), // input clkb
-  .enb((reT | we) & ~stall), // input enb
+  .enb((reT | we)),// & ~stall), // input enb
   .web(1'b0), // input [0 : 0] web
   .addrb(regT_addr), // input [4 : 0] addrb
   .dinb(32'd9), // input [31 : 0] dinb
