@@ -1,12 +1,11 @@
-module register_file_S(
+module register_file_T(
   input clka, // input clka
-  input ena, // input ena
   input wea, // input [0 : 0] wea
   input [4:0] addra, // input [4 : 0] addra
   input [31:0] dina, // input [31 : 0] dina
   output reg [31:0] douta, // output [31 : 0] douta
   input clkb,// input clkb
-  input web, // input [0 : 0] web
+  input enb,
   input [4:0] addrb, // input [4 : 0] addrb
   input [31:0] dinb, // input [31 : 0] dinb
   output reg [31:0] doutb // output [31 : 0] doutb
@@ -53,23 +52,23 @@ always @(clk,dst_addr,dst,we)
 //////////////////////////////////
 // RF is written on clock high //
 ////////////////////////////////
-always @(clkb,web,addrb,dinb)
-  if (clkb && web && |addrb)
-    mem[addrb] <= dinb;
+always @(clka,wea,addra,dina)
+  if (clka && wea && |addra)
+    mem[addra] <= dina;
 	
 //////////////////////////////
 // RF is read on clock low //
 ////////////////////////////
-always @(clka,ena,addra)
-  if (~clka && ena)
-    douta <= mem[addra];
-	
-//////////////////////////////
-// RF is read on clock low //
-////////////////////////////
-always @(clkb,addrb)
-  if (~clkb)
+always @(clkb,enb,addrb)
+  if (~clkb && enb)
     doutb <= mem[addrb];
+	
+//////////////////////////////
+// RF is read on clock low //
+////////////////////////////
+always @(clka,addra)
+  if (~clka)
+    douta <= mem[addra];
 	
 ////////////////////////////////////////
 // Dump register contents at program //

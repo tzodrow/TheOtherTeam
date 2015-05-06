@@ -27,8 +27,9 @@ module driver(
 
 	reg sel,wrt_rx_data;
 	wire[31:0] IF_instr;
-	wire[21:0] IF_PC, IF_next_PC, ID_is_branch, pc;
+	wire[21:0] IF_PC, IF_next_PC, pc;
 	wire[4:0] ID_regS_addr, ID_regT_addr, MEM_dst_reg, EX_dst_reg;
+	wire ID_is_branch;
 	wire [4:0] WB_dst_reg;
 	wire flush, hlt;
 	wire stall;
