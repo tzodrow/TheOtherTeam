@@ -2,7 +2,8 @@ module ID_EX_pipeline_reg(
 		clk, 
 		rst_n, 
 		stall, 
-		ID_hlt, 
+		//ID_hlt,
+		hlt,
 		flush, 
 		ID_PC, 
 		ID_PC_out, 
@@ -49,12 +50,13 @@ module ID_EX_pipeline_reg(
 		EX_mem_alu_select, 
 		EX_mem_we, 
 		EX_mem_re, 
-		EX_use_sprite_mem, 
-		EX_hlt);
+		EX_use_sprite_mem);
+		//EX_hlt
+		
 
 
 
-input clk, rst_n, stall, flush, ID_hlt;
+input clk, rst_n, stall, flush, hlt;
 
 //ID Stage input Declarations
 input[21:0] ID_PC, ID_PC_out;
@@ -72,7 +74,7 @@ input[3:0] ID_sprite_action;
 input ID_sprite_use_imm, ID_sprite_re, ID_sprite_we, ID_sprite_use_dst_reg, ID_use_sprite_mem;
 input[13:0] ID_sprite_imm;
 
-output reg EX_hlt;
+//output reg EX_hlt;
 output reg[21:0] EX_PC, EX_PC_out;
 //output reg[31:0] EX_s_data, EX_t_data; 
 output reg EX_use_imm, EX_use_dst_reg;
@@ -114,7 +116,7 @@ always @(posedge clk, negedge rst_n)
 	 EX_mem_we <= 0; 
 	 EX_mem_re <= 0;
 	 EX_use_sprite_mem <= 0;
-	 EX_hlt <= 0;
+	 //EX_hlt <= 0;
 	end
 	else if (flush) begin
 	 EX_PC <= 0;
@@ -142,9 +144,9 @@ always @(posedge clk, negedge rst_n)
 	 EX_mem_we <= 0; 
 	 EX_mem_re <= 0;
 	 EX_use_sprite_mem <= 0;
-	 EX_hlt <= 0;
+	 //EX_hlt <= 0;
 	end
-	else if (~EX_hlt | ~stall)
+	else if (~hlt | ~stall)
 	begin
 	 EX_PC <= ID_PC;
  	 EX_PC_out <= ID_PC_out;
@@ -171,7 +173,7 @@ always @(posedge clk, negedge rst_n)
 	 EX_mem_we <= ID_mem_we; 
 	 EX_mem_re <= ID_mem_re;
 	 EX_use_sprite_mem <= ID_use_sprite_mem;
-	 EX_hlt <= ID_hlt;
+	 //EX_hlt <= ID_hlt;
 	end
 
 
