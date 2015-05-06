@@ -32,6 +32,7 @@ module MEM(clk, rst_n, mem_data, addr, re, we, ALU_result, sprite_data, sprite_A
 	
 	main_mem3 your_instance_name (
   .clka(clk), // input clka
+  .rsta(~rst_n),
   .ena((re | we)), // input ena
   .wea(we), // input [0 : 0] wea
   .addra(mem_addr),//addr[4:0]), // input [4 : 0] addra
