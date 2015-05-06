@@ -133,7 +133,7 @@ module driver(
 	assign flush = 0;
 	
 	assign IF_instr_mem_re = ~stall; 	
-	assign IF_next_PC = (stall | hlt) ? IF_PC :  
+	assign IF_next_PC = (stall | ID_hlt) ? IF_PC :  
 							  (ID_is_branch) ? ID_branch_addr[7:0] :
 							   IF_PC + 1;
 
