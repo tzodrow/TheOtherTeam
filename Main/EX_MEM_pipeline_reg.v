@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module EX_MEM_pipeline_reg(clk, rst_n, hlt, stall, flush, EX_ov, EX_neg, EX_zero, EX_use_dst_reg, EX_branch_conditions, EX_dst_reg, EX_PC, EX_PC_out, /*EX_instr,*/ EX_ALU_result, EX_sprite_data, EX_s_data, EX_re, EX_we, EX_mem_ALU_select, EX_use_sprite_mem, EX_t_data, //Inputs
 							MEM_sprite_ALU_select, MEM_mem_ALU_select, MEM_flag_ov, MEM_flag_neg, MEM_flag_zero, MEM_re, MEM_we, MEM_addr, MEM_PC, MEM_PC_out, MEM_data, MEM_sprite_data, /*MEM_instr,*/ MEM_branch_cond, MEM_use_dst_reg,
 							MEM_use_sprite_mem, MEM_dst_reg, MEM_ALU_result, MEM_t_data);  //Outputs
@@ -33,6 +34,7 @@ always @(posedge clk, negedge rst_n)
 		MEM_dst_reg <= 0;
 		MEM_ALU_result <= 0;
 		MEM_t_data <= 0;
+		MEM_use_dst_reg <= 0;
 	end
 	else if (flush) begin
 		MEM_sprite_ALU_select <= 0;
@@ -51,6 +53,7 @@ always @(posedge clk, negedge rst_n)
 		MEM_dst_reg <= 0;
 		MEM_ALU_result <= 0;
 		MEM_t_data <= 0;
+		MEM_use_dst_reg <= 0;
 	end 
 	else if (!hlt) begin
 		MEM_sprite_ALU_select <= EX_use_sprite_mem;

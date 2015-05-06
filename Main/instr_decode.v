@@ -1,4 +1,4 @@
-
+`timescale 1ns / 1ps
 module instr_decode(
 	input clk,
 	input rst_n,

@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module EX(
 	input clk,
 	input rst_n,
@@ -66,7 +67,7 @@ module EX(
 			(alu_opcode == ALU_OP_NOR)  ? ~(src0 | src1)   :
 			(alu_opcode == ALU_OP_SLL)  ? src0 << src1[4:0]     :
 			(alu_opcode == ALU_OP_SRL)  ? src0 >> src1[4:0]     :
-			(alu_opcode == ALU_OP_SRA)  ? shiftInter    : ALU_result;
+			(alu_opcode == ALU_OP_SRA)  ? shiftInter    : 32'h0;
 			
 	//assign flag_carry = update_flag_carry ? carry : flag_carry;
 	//assign flag_ov = update_flag_ov ? ov : flag_ov;

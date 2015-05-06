@@ -1,24 +1,20 @@
+`timescale 1ns / 1ps
 module instr_mem(
-		input clk,
-		input rst_n,
-		input re,
-		input [21:0] addr,
-		output reg [31:0] instr
+		input clka,
+		input ena,
+		input [6:0] addra,
+		output reg [31:0] douta
 		);
 	
-	
-	
-	reg [31:0] memory [0:2**22-1];
+	reg [31:0] memory [0:2**6-1];
 		
 	initial begin
-		$readmemh("instr_mem.hex", memory);
+		$readmemb("instr_mem.hex", memory);
 	end
 	
-	always @ (posedge clk, negedge rst_n)
-		if(rst_n)
-			instr <= 32'h0;
-		else if(re)
-			instr <= memory[addr];
+	always @ (posedge clka)
+		if(ena)
+			douta <= memory[addra];
 	
 	
 endmodule

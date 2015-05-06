@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module MEM(
 	input clk, 
 	input rst_n, 
@@ -42,7 +43,7 @@ module MEM(
 	
 	main_mem MAIN_MEM (
 	  .clka(clk), // input clka
-	  .ena((re | we)), // input ena
+	  .ena(1'b1), // input ena
 	  .wea(we), // input [0 : 0] wea
 	  .addra(addr[4:0]), // input [4 : 0] addra
 	  .dina(mem_data), // input [31 : 0] dina

@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module IF_ID_pipeline_reg(
 		input clk, 
 		input rst_n, 
@@ -17,6 +18,8 @@ module IF_ID_pipeline_reg(
 		  ID_instr <= 0;
 		else if (!stall & !hlt)
 		  ID_instr <= IF_instr;
+		else
+		  ID_instr <= ID_instr;
 	
 	always @(posedge clk, negedge rst_n)
 		if (!rst_n)
@@ -25,5 +28,7 @@ module IF_ID_pipeline_reg(
 		  ID_PC <= 0;
 		else if (!stall & !hlt)
 		  ID_PC <= IF_PC;
+		else 
+		  ID_PC <= ID_PC;
 
 endmodule 

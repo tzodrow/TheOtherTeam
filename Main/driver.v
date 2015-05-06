@@ -41,7 +41,8 @@ module driver(
 	reg [3:0] we_counter_tim;
 	reg [2:0] hex_counter;
 	reg rst_hex_counter, dec_hex_counter;
-	reg [3:0] counter;
+	reg [4:0] counter;
+	wire [31:0] pc_out_test;
 	
 	localparam NUM_INSTRUCTIONS = 24'h000006;
 	
@@ -64,7 +65,7 @@ module driver(
 
 	
 	wire[31:0] IF_instr;
-	wire[21:0] IF_PC, ID_is_branch, IF_next_PC;
+	wire[21:0] IF_PC, IF_next_PC;
 	wire stall, flush, hlt;
 	wire rst_n;
 	
@@ -77,7 +78,7 @@ module driver(
 	wire [31:0] regS_data, regT_data;
 	
 	//ID Stage Wire Declarations
-	wire ID_hlt, ID_use_imm, ID_use_dst_reg;
+	wire ID_hlt, ID_use_imm, ID_use_dst_reg, ID_is_branch;
 	wire ID_update_neg, ID_update_carry, ID_update_ov, ID_update_zero;
 	wire[2:0] ID_alu_opcode, ID_branch_conditions;
 	wire[4:0] ID_dst_reg, ID_regS_addr, ID_regT_addr;
@@ -152,6 +153,7 @@ module driver(
 	
 	instr_fetch INSTR_FETCH(
 		.clk(clk), 
+		.rst_n(rst_n),
 		.hlt(hlt),
 		.stall(stall),
 		.addr(IF_PC), 
@@ -466,10 +468,11 @@ module driver(
 			counter <= counter + 1;
 	end
 	
-	wire [31:0] value1, value2, value3;
+	wire [31:0] value1, value2, value3, value4;
 	assign value1 = IF_instr;
-	assign value2 = {IF_PC[11:0], 3'b0, stall, MEM_dst_reg[3:0], EX_dst_reg[3:0], ID_regS_addr[3:0], ID_regT_addr[3:0]};
+	assign value2 = {IF_PC[3:0], IF_next_PC[3:0], 7'b0, stall, MEM_dst_reg[3:0], EX_dst_reg[3:0], ID_regS_addr[3:0], ID_regT_addr[3:0]};
 	assign value3 = reg_WB_data;
+	assign value4 = IF_instr;
 	
 	always @ (posedge clk, posedge rst) begin
 		if(rst) begin
@@ -499,6 +502,7 @@ module driver(
 			val23 <= 0;
 		end
 		else if(~&counter) begin
+		/*
 			case(counter)
 				5'h00 : begin
 					val0 <= value1;
@@ -540,6 +544,33 @@ module driver(
 					val15 <= value2;
 					val23 <= value3;
 				end
+			endcase
+			*/
+			case(counter)
+				5'h00 : val0 <= value4;
+				5'h01 : val1 <= value4;
+				5'h02 : val2 <= value4;
+				5'h03 : val3 <= value4;
+				5'h04 : val4 <= value4;
+				5'h05 : val5 <= value4;
+				5'h06 : val6 <= value4;
+				5'h07 : val7 <= value4;
+				5'h08 : val8 <= value4;
+				5'h09 : val9 <= value4;
+				5'h0a : val10 <= value4;
+				5'h0b : val11 <= value4;
+				5'h0c : val12 <= value4;
+				5'h0d : val13 <= value4;
+				5'h0e : val14 <= value4;
+				5'h0f : val15 <= value4;
+				5'h10 : val16 <= value4;
+				5'h11 : val17 <= value4;
+				5'h12 : val18 <= value4;
+				5'h13 : val19 <= value4;
+				5'h14 : val20 <= value4;
+				5'h15 : val21 <= value4;
+				5'h16 : val22 <= value4;
+				5'h17 : val23 <= value4;
 			endcase
 		end
 	end
