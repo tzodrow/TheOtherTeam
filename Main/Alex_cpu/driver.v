@@ -51,6 +51,7 @@ module driver(
 	localparam PRINT_HLT2 = 4'b1010;
 	localparam PRINT_HLT3 = 4'b1011;
 	localparam PRINT_HLT4 = 4'b1100;
+	localparam PRINT_TEST_HLT = 4'b1101;
 	
 	reg sel,wrt_rx_data;
 	wire[31:0] IF_instr;
@@ -176,6 +177,20 @@ module driver(
 	
 	wire [7:0]wb_hlt_ascii;
 	assign wb_hlt_ascii = ({7'h00, WB_hlt} + 8'h30);
+	
+	
+	reg hlt_asserted;
+	always @ (posedge clk, posedge rst)
+		if(rst)
+			hlt_asserted <= 0;
+		else if(ID_hlt)
+			hlt_asserted <= 1;
+			
+	wire [3:0] hlt_test_data;
+	wire [7:0] hlt_test_ascii;
+	assign hlt_test_data = {IF_PC[2:0],hlt_asserted};
+	hex2ascii hlt_ascii(.hex(hlt_test_data), .ascii(hlt_test_ascii));
+			
     ////////////////////////////////////////
     // Registers used for control signals //
     ////////////////////////////////////////
@@ -612,6 +627,10 @@ module driver(
 							nxt_state = PRINT_PC;
 							ioaddr = 2'b00;
 						end
+						else if(databus == 8'h33) begin
+							nxt_state = PRINT_TEST_HLT;
+							ioaddr = 2'b00;
+						end
 						else 
 							nxt_state = RECEIVE_WAIT;
 						
@@ -772,6 +791,19 @@ module driver(
 				end
 				else begin
 					nxt_state = PRINT_HLT4;
+				end
+			end
+			
+			PRINT_TEST_HLT : begin
+				if(tbr) begin
+					nxt_state = RECEIVE_WAIT;					
+					ioaddr = 2'b00;
+					iorw = 0;
+					data_out = hlt_test_ascii;
+					sel = 1;
+				end
+				else begin
+					nxt_state = PRINT_TEST_HLT;
 				end
 			end
 		endcase
