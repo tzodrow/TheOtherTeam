@@ -1,7 +1,7 @@
 module EX_MEM_pipeline_reg(
 		input clk, 
 		input rst_n, 
-		input EX_hlt, 
+		input hlt, 
 		input stall, 
 		input flush, 
 		input EX_ov, 
@@ -39,8 +39,8 @@ module EX_MEM_pipeline_reg(
 		output reg MEM_use_sprite_mem, 
 		output reg [4:0] MEM_dst_reg, 
 		output reg [31:0] MEM_ALU_result, 
-		output reg [31:0] MEM_t_data, 
-		output reg MEM_hlt);  //Outputs
+		output reg [31:0] MEM_t_data);
+		//output reg MEM_hlt);  //Outputs
 /*
 input clk, rst_n, stall, flush, EX_hlt;
 input EX_ov, EX_neg, EX_zero, EX_use_dst_reg, EX_re, EX_we, EX_mem_ALU_select, EX_use_sprite_mem;
@@ -81,7 +81,7 @@ always @(posedge clk, negedge rst_n)
 		MEM_ALU_result <= 0;
 		MEM_t_data <= 0;
 		MEM_use_dst_reg <= 0;
-		MEM_hlt <= 0;
+		//MEM_hlt <= 0;
 	end
 	else if (flush) begin
 		MEM_sprite_ALU_select <= 0;
@@ -104,9 +104,9 @@ always @(posedge clk, negedge rst_n)
 		MEM_ALU_result <= 0;
 		MEM_t_data <= 0;
 		MEM_use_dst_reg <= 0;
-		MEM_hlt <= 0;
+		//MEM_hlt <= 0;
 	end 
-	else if (!MEM_hlt) begin
+	else if (!hlt) begin
 		MEM_sprite_ALU_select <= EX_use_sprite_mem;
 		MEM_mem_ALU_select <= EX_mem_ALU_select;                  
 		MEM_flag_ov <= EX_ov; 
@@ -126,7 +126,7 @@ always @(posedge clk, negedge rst_n)
 		MEM_dst_reg <= EX_dst_reg;
 		MEM_ALU_result <= EX_ALU_result;
 		MEM_t_data <= EX_t_data;
-		MEM_hlt <= EX_hlt;
+		//MEM_hlt <= EX_hlt;
 	end  
 	  
 endmodule 

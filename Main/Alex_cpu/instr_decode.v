@@ -46,11 +46,13 @@ output reg use_sprite_mem;
 output reg [21:0]return_PC_addr_reg; //return address for the jump and link instr. No longer inside the reg file as r29
 
 reg reT, reS; //Reg read enable signals sent to the reg file
-output reg sw_instr;
+output sw_instr;
 output [4:0]regS_addr, regT_addr; //to the reg file
 output reg jr_instr;
 reg jal_instr;
- 
+
+wire [4:0] opcode;
+reg cord_instr, rd_instr, mov_instr, movi_instr, act_ld_instr; //asserted for the CORD and RD gpu instructions for determining dst_reg bitfield
 //reg_file iRF(.clk(clk),.regS(regS_addr),.regT(regT_addr),.p0(regS_data_ID),
 //.p1(regT_data_ID),.reS(reS),.reT(reT),.dst_reg_WB(dst_reg_WB),
 //.dst_reg_data_WB(dst_reg_data_WB),.we(we),.hlt(hlt));
@@ -121,6 +123,8 @@ localparam ALU_SLL = 3'b101;
 localparam ALU_SRL = 3'b110;
 localparam ALU_SRA = 3'b111;
 
+assign sw_instr = (opcode == 5'b00101) ? 1 : 0;
+
 always  @(posedge clk, negedge rst_n) begin
 	if(!rst_n)
 			return_PC_addr_reg <= 22'd0;
@@ -129,10 +133,8 @@ always  @(posedge clk, negedge rst_n) begin
 end
 	
 	
-wire [4:0] opcode;
-assign PC_out = PC_in;
 
-reg cord_instr, rd_instr, mov_instr, movi_instr, act_ld_instr; //asserted for the CORD and RD gpu instructions for determining dst_reg bitfield
+assign PC_out = PC_in;
 
 // TODO -- this may be the wrong address
 assign dst_reg = (cord_instr == 1) ? instr[14:10]:
@@ -181,7 +183,7 @@ always @(*) begin
  cord_instr = 0;
  rd_instr = 0;
  movi_instr = 0;
- sw_instr = 0;
+ //sw_instr = 0;
  jr_instr = 0;
  jal_instr = 0;
  mov_instr = 0;
@@ -271,7 +273,7 @@ always @(*) begin
 	SW : begin
  	reS = 1;
 	reT = 1;
-	sw_instr = 1;
+	//sw_instr = 1;
 	use_imm = 1;
  	mem_we = 1;
 	end
