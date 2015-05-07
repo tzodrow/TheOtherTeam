@@ -38,7 +38,7 @@ def main(argv):
         Function.process(line, o, line_counter)
         line_counter += 1
 
-    for x in range(0, 131072 - line_counter - 1):
+    for x in range(0, 100 - line_counter - 1):
         o.write(Helper.pad("0", 32) + ",\n")
 
     o.write(Helper.pad("0", 32) + ";")
