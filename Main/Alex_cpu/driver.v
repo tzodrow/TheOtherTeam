@@ -186,6 +186,16 @@ module driver(
 		else if(ID_hlt)
 			hlt_asserted <= 1;
 			
+	reg [7:0]we_count;
+	always @ (posedge clk, posedge rst)
+		if(rst)
+			we_count <= 0;
+		else if(MEM_we && !MEM_hlt)
+			we_count <= we_count + 1;
+			
+			
+	wire [7:0]we_count_ascii;
+	assign we_count_ascii = (we_count + 8'h30);
 	wire [3:0] hlt_test_data;
 	wire [7:0] hlt_test_ascii;
 	assign hlt_test_data = {IF_PC[2:0],hlt_asserted};
@@ -466,11 +476,11 @@ module driver(
 			.MEM_instr(MEM_instr),
 			.MEM_use_dst_reg(MEM_use_dst_reg), 
 			.MEM_dst_reg(MEM_dst_reg), 
-			.MEM_mem_result(MEM_mem_result), //Inputs
+			//.MEM_mem_result(MEM_mem_result), //Inputs
 			.WB_mem_ALU_select(WB_mem_ALU_select), 
 			.WB_PC(WB_PC), 
 			.WB_PC_out(WB_PC_out), 
-			.WB_mem_result(WB_mem_result), 
+			//.WB_mem_result(WB_mem_result), 
 			.WB_sprite_ALU_result(WB_sprite_ALU_result), 
 			.WB_instr(WB_instr), 
 			.WB_use_dst_reg(WB_use_dst_reg), 
@@ -484,7 +494,7 @@ module driver(
 	WB wb_Test(
 			.clk(clk), 
 			.rst_n(rst_n), 
-			.mem_result(WB_mem_result), 
+			.mem_result(MEM_mem_result), 
 			.sprite_ALU_result(WB_sprite_ALU_result), 
 			.mem_ALU_select(WB_mem_ALU_select), //Inputs
 		  	.reg_WB_data(reg_WB_data)); //Outputs
@@ -744,10 +754,10 @@ module driver(
 			
 			PRINT_HLT1: begin
 				if(tbr) begin
-					nxt_state = PRINT_HLT2;					
+					nxt_state = RECEIVE_WAIT;					
 					ioaddr = 2'b00;
 					iorw = 0;
-					data_out = id_hlt_ascii;
+					data_out = we_count_ascii;//id_hlt_ascii;
 					sel = 1;
 				end
 				else begin
