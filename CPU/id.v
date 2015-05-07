@@ -8,14 +8,11 @@ module id(
 		output reg pc_reg_sel, // Select the Register data as the PC
 		output reg pc_immd_sel, // Select the Immediate data as the PC
 		output reg alu_immd_sel, // Select the Immediate Value in the ALU
-		output reg mem_addr_sel, // Select the ALU result as the mem addresss
-		output reg mem_data_sel, // Select the Register data as the mem data
 		output reg mem_we, // Write Enable signal for the write to Memory
 		output reg wb_mem_sel, // Select to write back the data from the Memory instead of ALU
 		output reg wb_pc_sel, // Select to write back the data from the PC instead of ALU
 		output reg wb_we, // Write Enable signal for the WB to Register File
 		output reg wb_mov_sel, // Select to write back the data from move instructions
-		output reg mov_immd_sel, // Select to write back a byte of data to a Register
 		output reg hlt_out,
 		output [1:0] mov_byte_sel, // Select for which byte is written on a MOVi
 		output [7:0] mov_byte,
@@ -67,8 +64,12 @@ module id(
 	localparam OVFL = 3'b110;
 	localparam UNCOND = 3'b111;
 	
-	assign reg1_addr = instr[21:17];
-	assign reg2_addr = instr[16:12];
+	localparam JAL_REG = 5'd31;
+	
+	reg save_jal;
+	
+	assign reg1_addr = (save_jal) ? JAL_REG : instr[21:17];
+	assign reg2_addr = (mem_we) ? instr[26:22] : instr[16:12];
 	
 	assign dst_reg = instr[26:22];
 	
@@ -82,17 +83,15 @@ module id(
 	always @ (*) begin
 		alu_op = ALU_ADD;
 		alu_immd_sel = 0;
-		mem_addr_sel = 0;
 		wb_mem_sel = 0;
-		mem_data_sel = 0;
 		mem_we = 0;
-		mov_immd_sel = 0;
 		wb_we = 0;
 		wb_mov_sel = 0;
 		wb_pc_sel = 0;
 		pc_reg_sel = 0;
 		pc_immd_sel = 0;
 		hlt_out = 0;
+		save_jal = 0;
 		
 		case(instr[31:27])
 			ADD : begin
@@ -116,15 +115,12 @@ module id(
 			LW : begin
 				alu_op = ALU_ADD;
 				alu_immd_sel = 1;
-				mem_addr_sel = 1;
 				wb_mem_sel = 1;
 				wb_we = 1;
 			end
 			SW : begin
 				alu_op = ALU_ADD;
 				alu_immd_sel = 1;
-				mem_addr_sel = 1;
-				mem_data_sel = 1;
 				mem_we = 1;
 			end
 			MOV : begin
@@ -133,7 +129,6 @@ module id(
 				wb_we = 1;
 			end
 			MOVi : begin
-				mov_immd_sel = 1;
 				wb_mov_sel = 1;
 				wb_we = 1;
 			end
@@ -169,6 +164,7 @@ module id(
 				pc_reg_sel = 1;
 			end
 			JAL : begin
+				save_jal = 1;
 				pc_immd_sel = 1;
 				wb_pc_sel = 1;
 				wb_we = 1;
